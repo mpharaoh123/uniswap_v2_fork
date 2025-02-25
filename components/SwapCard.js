@@ -45,7 +45,11 @@ export default function SwapCard({
           ERC20_ABI,
           provider
         );
+        console.log("contract", contract);
+
         const balance = await contract.balanceOf(account);
+        console.log("balance", ethers.utils.formatUnits(balance, selectedTokenIn.decimals));
+        
         setTokenInBalance(
           ethers.utils.formatUnits(balance, selectedTokenIn.decimals)
         );
