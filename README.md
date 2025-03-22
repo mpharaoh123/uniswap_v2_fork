@@ -1,3 +1,7 @@
+1. 自己导入代币，不用deployed，可以查询价格并swap
+2. 使用uniswapV2Router来addLiquidity不.js行
+3. getQuote时，除WETH的代币对，均通过WETH作为中间路径，用uniswapRouter查询价格
+
 # Advanced Uniswap Token Swap Dapp
 
 🔥 Build & Deploy an Advanced Uniswap Token Swap Dapp | Earn Commission on Every Trade! 💰
