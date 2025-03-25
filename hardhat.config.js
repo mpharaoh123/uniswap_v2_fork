@@ -13,11 +13,7 @@ module.exports = {
         auto: true,
         interval: 0,
       },
-<<<<<<< HEAD
       // chainId: 1, //设置为1的话会和主网的节点冲突
-=======
-      // chainId: 1,
->>>>>>> 499881ae695228c6c999d4ff6691fdbdd2e9db9e
       allowUnlimitedContractSize: true,
       accounts: {
         accountsBalance: "10000000000000000000000", // 10000 ETH
