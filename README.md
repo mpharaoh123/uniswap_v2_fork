@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # tips
 1. npm i 或者 yarn install
 2. chrome-extension异常：钱包冲突。卸载其他钱包，防止冲突
@@ -6,6 +7,11 @@
 
 # scripts
 1. ethers为全局变量，直接使用，不用引入
+=======
+1. 自己导入代币，不用deployed，可以查询价格并swap
+2. 使用uniswapV2Router来addLiquidity不.js行
+3. getQuote时，除WETH的代币对，均通过WETH作为中间路径，用uniswapRouter查询价格
+>>>>>>> 499881ae695228c6c999d4ff6691fdbdd2e9db9e
 
 # Advanced Uniswap Token Swap Dapp
 
