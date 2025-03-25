@@ -1,3 +1,12 @@
+# tips
+1. npm i 或者 yarn install
+2. chrome-extension异常：钱包冲突。卸载其他钱包，防止冲突
+3. 最好用coinbase钱包（要开梯子），不用手动添加 http://localhost:127.0.0.1:8545/。小狐狸和tpocket都可能会添加失败
+4. 如果点swap，钱包卡死一直转，就多换几个浏览器，edge、chrome、firefox
+
+# scripts
+1. ethers为全局变量，直接使用，不用引入
+
 # Advanced Uniswap Token Swap Dapp
 
 🔥 Build & Deploy an Advanced Uniswap Token Swap Dapp | Earn Commission on Every Trade! 💰

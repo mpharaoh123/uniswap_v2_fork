@@ -29,12 +29,13 @@ export function Web3Provider({ children }) {
           UNISWAP_ROUTER_ABI,
           web3Signer
         );
+        const web3Network = await web3Provider.getNetwork()
 
         setAccount(accounts[0]);
         setProvider(web3Provider);
         setSigner(web3Signer);
         setUniswapRouter(router);
-        setNetwork(network);
+        setNetwork(web3Network);
 
         // Listen for account changes
         window.ethereum.on("accountsChanged", (accounts) => {
