@@ -48,8 +48,11 @@ export default function SwapCard({
         console.log("contract", contract);
 
         const balance = await contract.balanceOf(account);
-        console.log("balance", ethers.utils.formatUnits(balance, selectedTokenIn.decimals));
-        
+        console.log(
+          "balance",
+          ethers.utils.formatUnits(balance, selectedTokenIn.decimals)
+        );
+
         setTokenInBalance(
           ethers.utils.formatUnits(balance, selectedTokenIn.decimals)
         );
