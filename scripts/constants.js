@@ -19,6 +19,14 @@ const UNISWAP_ROUTER_ABI = [
   "function WETH() public view returns (address)",
 ];
 
+const UNISWAP_FACTORY_ABI = [
+  "function getPair(address tokenA, address tokenB) external view returns (address pair)",
+];
+
+const UNISWAP_POOL_ABI = [
+  "function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
+];
+
 const ERC20_ABI = [
   // Read-only functions
   "function balanceOf(address account) external view returns (uint256)",
@@ -191,6 +199,8 @@ const TOKENS = {
 module.exports = {
   UNISWAP_ADDRESSES,
   UNISWAP_ROUTER_ABI,
+  UNISWAP_FACTORY_ABI,
+  UNISWAP_POOL_ABI,
   ERC20_ABI,
   TOKENS,
 };

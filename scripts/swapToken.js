@@ -1,6 +1,8 @@
 const {
-  UNISWAP_ROUTER_ABI,
   UNISWAP_ADDRESSES,
+  UNISWAP_ROUTER_ABI,
+  UNISWAP_FACTORY_ABI,
+  UNISWAP_POOL_ABI,
   ERC20_ABI,
   TOKENS,
 } = require("./constants");
@@ -9,7 +11,6 @@ const {
   npx hardhat run --network localhost scripts/swapToken.js
  */
 async function main() {
-  const provider = ethers.provider;
   const [signer] = await ethers.getSigners();
   const address = await signer.getAddress();
 
@@ -29,8 +30,9 @@ async function main() {
   }
 
   // 选择前两个元素作为随机选取的代币名称
-  const [firstTokenName, secondTokenName] = tokensNames.slice(0, 2);
+  // const [firstTokenName, secondTokenName] = tokensNames.slice(0, 2);
 
+  [firstTokenName, secondTokenName] = ["USDT", "BUSD"];
   // 获取对应的代币对象
   const token0 = TOKENS[firstTokenName];
   const token1 = TOKENS[secondTokenName];
@@ -38,7 +40,7 @@ async function main() {
   console.log("Random Token 0:", token0.symbol);
   console.log("Random Token 1:", token1.symbol);
 
-  const router = new ethers.Contract(
+  const uniswapRouter = new ethers.Contract(
     UNISWAP_ADDRESSES.V2_ROUTER,
     UNISWAP_ROUTER_ABI,
     signer
@@ -49,9 +51,6 @@ async function main() {
   // 将余额从 Wei 转换为 Ether（ETH）
   const balanceInEther = ethers.utils.formatEther(balance);
   console.log(`地址: ${address}的余额: ${balanceInEther} ETH`);
-
-  let token0Balance;
-  let token1Balance;
 
   const token0Contract = new ethers.Contract(token0.address, ERC20_ABI, signer);
   const token1Contract = new ethers.Contract(token0.address, ERC20_ABI, signer);
@@ -64,34 +63,74 @@ async function main() {
   console.log(`token0 ${token0.symbol}的余额为：${token0BalNum}`);
   console.log(`token0 ${token1.symbol}的余额为：${token1BalNum}`);
 
-  //todo 获取amountOut
+  const amountIn = ethers.utils.parseUnits("1000", token0.decimals);
+  const amountOut = await getQuote(uniswapRouter, token0, token1, amountIn);
+  await getReserves(token0, token1);
 }
 
-async function getQuote(
-  uniswapRouter,
-  selectedTokenIn,
-  selectedTokenOut,
-  amountIn
-) {
-  const amountInWei = ethers.utils.parseUnits(
-    amountIn.toString(),
-    selectedTokenIn.decimals
+//获取uniswap factory中指定池子的代币储量
+async function getReserves(token0, token1) {
+  // 获取 Uniswap V2 Factory 合约地址
+  const factoryAddress = UNISWAP_ADDRESSES.FACTORY;
+
+  // 创建 Factory 合约实例
+  const factoryContract = new ethers.Contract(
+    factoryAddress,
+    UNISWAP_FACTORY_ABI,
+    ethers.provider
   );
-  const path = [selectedTokenIn.address, selectedTokenOut.address];
+
+  // 获取流动性池地址
+  const pairAddress = await factoryContract.getPair(
+    token0.address,
+    token1.address
+  );
+
+  // 创建流动性池合约实例
+  const pairContract = new ethers.Contract(
+    pairAddress,
+    UNISWAP_POOL_ABI,
+    ethers.provider
+  );
+
+  // 获取储备量
+  const [reserve0, reserve1] = await pairContract.getReserves();
+
+  // 格式化储备量
+  const reserve0Formatted = ethers.utils.formatUnits(reserve0, token0.decimals);
+  const reserve1Formatted = ethers.utils.formatUnits(reserve1, token1.decimals);
+
+  console.log(
+    `uniswapV2中 ${token0.symbol}的储备量为${reserve0Formatted} ${token1.symbol}的储备量为${reserve1Formatted}`
+  );
+  return { reserve0: reserve0Formatted, reserve1: reserve1Formatted };
+}
+
+async function getQuote(uniswapRouter, token0, token1, amountIn) {
+  const path = [token0.address, token1.address];
 
   if (
-    selectedTokenIn.address !== TOKENS.WETH.address &&
-    selectedTokenOut.address !== TOKENS.WETH.address
+    token0.address !== TOKENS.WETH.address &&
+    token1.address !== TOKENS.WETH.address
   ) {
     // If neither token is WETH, route through WETH
     path.splice(1, 0, TOKENS.WETH.address);
   }
 
-  const amounts = await uniswapRouter.getAmountsOut(amountInWei, path);
+  const amounts = await uniswapRouter.getAmountsOut(amountIn, path);
+
+  const inputAmountFormatted = ethers.utils.formatUnits(
+    amountIn,
+    token0.decimals
+  );
   const outputAmountFormatted = ethers.utils.formatUnits(
     amounts[amounts.length - 1],
-    selectedTokenOut.decimals
+    token1.decimals
   );
+  console.log(
+    `${inputAmountFormatted}数量的${token0.symbol} 可以swap ${outputAmountFormatted}数量的${token1.symbol}`
+  );
+  return outputAmountFormatted;
 }
 
 main().catch(console.error);
