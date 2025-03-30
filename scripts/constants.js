@@ -1,46 +1,66 @@
+const UNISWAP_ROUTER_ABI =
+  require("@uniswap/v2-periphery/build/IUniswapV2Router02.json").abi;
+const WETH_ABI = require("@uniswap/v2-periphery/build/WETH9.json").abi;
+const ERC20_ABI = require("@uniswap/v2-core/build/IERC20.json").abi;
+const UNISWAP_PAIR_ABI =
+  require("@uniswap/v2-core/build/IUniswapV2Pair.json").abi;
+const UNISWAP_FACTORY_ABI =
+  require("@uniswap/v2-core/build/IUniswapV2Factory.json").abi;
+
 // constants/addresses.js
 const UNISWAP_ADDRESSES = {
   V2_ROUTER: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
   FACTORY: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
 };
 
-// constants/abis.js
-const UNISWAP_ROUTER_ABI = [
-  // Read-only functions
-  "function getAmountsOut(uint amountIn, address[] memory path) public view returns (uint[] memory amounts)",
-  "function getAmountsIn(uint amountOut, address[] memory path) public view returns (uint[] memory amounts)",
+// // constants/abis.js
+// const UNISWAP_ROUTER_ABI = [
+//   // Read-only functions
+//   "function getAmountsOut(uint amountIn, address[] memory path) public view returns (uint[] memory amounts)",
+//   "function getAmountsIn(uint amountOut, address[] memory path) public view returns (uint[] memory amounts)",
 
-  // State-changing functions
-  "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)",
-  "function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)",
-  "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)",
+//   // State-changing functions
+//   "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)",
+//   "function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)",
+//   "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)",
 
-  // Token approval related functions
-  "function WETH() public view returns (address)",
-];
+//   // Token approval related functions
+//   "function WETH() public view returns (address)",
+// ];
 
-const UNISWAP_FACTORY_ABI = [
-  "function getPair(address tokenA, address tokenB) external view returns (address pair)",
-];
+// const UNISWAP_FACTORY_ABI = [
+//   "function getPair(address tokenA, address tokenB) external view returns (address pair)",
+// ];
 
-const UNISWAP_POOL_ABI = [
-  "function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
-];
+// const UNISWAP_PAIR_ABI = [
+//   "function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
+// ];
 
-const ERC20_ABI = [
-  // Read-only functions
-  "function balanceOf(address account) external view returns (uint256)",
-  "function decimals() external view returns (uint8)",
-  "function symbol() external view returns (string)",
+// const WETH_ABI = [
+//   // Basic ERC20 functions
+//   "function transfer(address to, uint256 value) external returns (bool)",
+//   "function approve(address spender, uint256 value) external returns (bool)",
+//   "function balanceOf(address owner) external view returns (uint256)",
+//   "function allowance(address owner, address spender) external view returns (uint256)",
+//   // WETH specific functions
+//   "function deposit() external payable",
+//   "function withdraw(uint256 wad) external",
+// ];
 
-  // State-changing functions
-  "function approve(address spender, uint256 amount) external returns (bool)",
-  "function allowance(address owner, address spender) external view returns (uint256)",
+// const ERC20_ABI = [
+//   // Read-only functions
+//   "function balanceOf(address account) external view returns (uint256)",
+//   "function decimals() external view returns (uint8)",
+//   "function symbol() external view returns (string)",
 
-  // Events
-  "event Transfer(address indexed from, address indexed to, uint256 value)",
-  "event Approval(address indexed owner, address indexed spender, uint256 value)",
-];
+//   // State-changing functions
+//   "function approve(address spender, uint256 amount) external returns (bool)",
+//   "function allowance(address owner, address spender) external view returns (uint256)",
+
+//   // Events
+//   "event Transfer(address indexed from, address indexed to, uint256 value)",
+//   "event Approval(address indexed owner, address indexed spender, uint256 value)",
+// ];
 
 const TOKENS = {
   // Native Wrapped Token
@@ -200,7 +220,8 @@ module.exports = {
   UNISWAP_ADDRESSES,
   UNISWAP_ROUTER_ABI,
   UNISWAP_FACTORY_ABI,
-  UNISWAP_POOL_ABI,
+  UNISWAP_PAIR_ABI,
   ERC20_ABI,
+  WETH_ABI,
   TOKENS,
 };
