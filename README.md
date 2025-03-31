@@ -1,7 +1,7 @@
 # start tips
 1. npm i 或者 yarn install
-2. chrome-extension异常：钱包冲突。卸载其他钱包，防止冲突
-3. 最好用coinbase钱包（要开梯子），不用手动添加 http://localhost:127.0.0.1:8545/。小狐狸和tpocket都可能会添加失败
+2. 浏览器报chrome-extension异常：钱包冲突。卸载其他钱包，防止冲突
+3. coinbase钱包（要开梯子），不用手动添加 http://localhost:127.0.0.1:8545/。小狐狸和tpocket都可能会添加失败
 4. 如果点swap，钱包卡死一直转，就多换几个浏览器，edge、chrome、firefox
 5. weth可以swap任何币种，但是erc20 swap erc20 报错
 

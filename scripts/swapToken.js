@@ -15,9 +15,30 @@ const COMMISSION_RATE_PRICE = process.env.COMMISSION_RATE;
   npx hardhat run --network localhost scripts/swapToken.js
  */
 async function main() {
+
   const [signer] = await ethers.getSigners();
   const provider = ethers.provider;
   const account = await signer.getAddress();
+
+  // 获取余额（单位为 Wei）
+  const balance = await signer.getBalance();
+  // 将余额从 Wei 转换为 Ether（ETH）
+  const balanceInEther = ethers.utils.formatEther(balance);
+  console.log(`Wallet: ${account}`);
+  console.log(`ETH balance: ${balanceInEther}`);
+
+  const wethContract = new ethers.Contract(
+    TOKENS.WETH.address,
+    WETH_ABI,
+    signer
+  );
+
+  const wethBalance = await wethContract.balanceOf(account);
+  const wethBalanceNum = ethers.utils.formatUnits(
+    wethBalance,
+    TOKENS.WETH.decimals
+  );
+  console.log(`WETH balance: ${wethBalanceNum}`);
 
   // 获取所有代币的名称数组
   const tokensNames = Object.keys(TOKENS);
@@ -35,27 +56,17 @@ async function main() {
   }
 
   // 选择前两个元素作为随机选取的代币名称
-  // const [firstTokenName, secondTokenName] = tokensNames.slice(0, 2);
+  let [firstTokenName, secondTokenName] = tokensNames.slice(0, 2);
 
-  [firstTokenName, secondTokenName] = ["WETH", "USDT"];
+  let amount = "10"; // amountIn数量
+  [firstTokenName, secondTokenName] = ["USDT", secondTokenName];
   // 获取对应的代币对象
   const token0 = TOKENS[firstTokenName];
   const token1 = TOKENS[secondTokenName];
 
   console.log("Random Token 0:", token0.symbol);
   console.log("Random Token 1:", token1.symbol);
-
-  const uniswapRouter = new ethers.Contract(
-    UNISWAP_ADDRESSES.V2_ROUTER,
-    UNISWAP_ROUTER_ABI,
-    signer
-  );
-
-  // 获取余额（单位为 Wei）
-  const balance = await signer.getBalance();
-  // 将余额从 Wei 转换为 Ether（ETH）
-  const balanceInEther = ethers.utils.formatEther(balance);
-  console.log(`地址: ${account}的余额: ${balanceInEther} ETH`);
+  await getReserves(token0, token1);
 
   const token0Contract = new ethers.Contract(token0.address, ERC20_ABI, signer);
   const token1Contract = new ethers.Contract(token1.address, ERC20_ABI, signer);
@@ -69,34 +80,30 @@ async function main() {
     token1.decimals
   );
 
-  console.log(`swap前, token0 ${token0.symbol}的余额为：${token0BalNum}`);
-  console.log(`swap前, token1 ${token1.symbol}的余额为：${token1BalNum}`);
+  console.log(`Before swap, token0 ${token0.symbol} balance: ${token0BalNum}`);
+  console.log(`Before swap, token1 ${token1.symbol} balance: ${token1BalNum}`);
 
-  const wethContract = new ethers.Contract(
-    TOKENS.WETH.address,
-    WETH_ABI,
+  let amountIn = ethers.utils.parseUnits(amount, token0.decimals);
+  const COMMISSION_AMOUNT = ethers.utils.parseEther(
+    COMMISSION_RATE_PRICE.toString()
+  );
+  const totalNeeded = amountIn.add(COMMISSION_AMOUNT);
+  const gasPrice = await provider.getGasPrice();
+  const uniswapRouter = new ethers.Contract(
+    UNISWAP_ADDRESSES.V2_ROUTER,
+    UNISWAP_ROUTER_ABI,
     signer
   );
-
-  const wethBalance = await wethContract.balanceOf(account);
-  const wethBalanceNum = ethers.utils.formatUnits(
-    wethBalance,
-    TOKENS.WETH.decimals
-  );
-  console.log(`weth的余额为: ${wethBalanceNum}`);
-
-  let amount = "10";
-  let amountIn = ethers.utils.parseUnits(amount, token0.decimals);
   if (token0.symbol == "WETH") {
-    const COMMISSION_AMOUNT = ethers.utils.parseEther(
-      COMMISSION_RATE_PRICE.toString()
-    );
-    const totalNeeded = amountIn.add(COMMISSION_AMOUNT);
-    const gasPrice = await provider.getGasPrice();
+    const depositAmount = totalNeeded.sub(wethBalance);
+    if (balance.lt(depositAmount)) {
+      console.error("Insufficient ETH balance to complete the deposit.");
+      return;
+    }
+
     if (wethBalance.lt(totalNeeded)) {
-      balanceInEther;
       const tx = await wethContract.deposit({
-        value: totalNeeded,
+        value: depositAmount,
         gasLimit: 100000,
         gasPrice: gasPrice,
       });
@@ -119,9 +126,27 @@ async function main() {
       );
       await approveTx.wait(1);
     }
+  } else {
+    // 如果 token0 不是 WETH，确保用户有足够的 token0 余额
+    const token0Balance = await token0Contract.balanceOf(account);
+    if (token0Balance.lt(amountIn)) {
+      console.error(`Insufficient ${token0.symbol} balance.`);
+      return;
+    }
+    // 检查用户是否已经授权足够的代币给 Uniswap 路由器
+    const allowance = await token0Contract.allowance(
+      account,
+      uniswapRouter.address
+    );
+    if (allowance.lt(amountIn)) {
+      const approveTx = await token0Contract.approve(
+        uniswapRouter.address,
+        ethers.constants.MaxInt256
+      );
+      await approveTx.wait(1);
+    }
   }
 
-  await getReserves(token0, token1);
   const [path, amountOut] = await getQuote(
     uniswapRouter,
     token0,
@@ -131,7 +156,6 @@ async function main() {
 
   const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
   const minOutput = amountOut.mul(995).div(1000);
-  const gasPrice = await provider.getGasPrice();
 
   const swapTx = await uniswapRouter.swapExactTokensForTokens(
     amountIn,
@@ -146,9 +170,7 @@ async function main() {
     }
   );
 
-  console.log("Waiting for swap confirmation...");
   await swapTx.wait(1);
-  
 
   token0BalNum = ethers.utils.formatUnits(
     await token0Contract.balanceOf(account),
@@ -159,8 +181,8 @@ async function main() {
     token1.decimals
   );
 
-  console.log(`swap后, token0 ${token0.symbol}的余额为：${token0BalNum}`);
-  console.log(`swap后, token1 ${token1.symbol}的余额为：${token1BalNum}`);
+  console.log(`After swap, token0 ${token0.symbol} balance: ${token0BalNum}`);
+  console.log(`After swap, token1 ${token1.symbol} balance: ${token1BalNum}`);
 }
 
 //获取uniswap factory中指定池子的代币储量
@@ -192,11 +214,15 @@ async function getReserves(token0, token1) {
   const [reserve0, reserve1] = await pairContract.getReserves();
 
   // 格式化储备量
-  const reserve0Formatted = ethers.utils.formatUnits(reserve0, token0.decimals);
-  const reserve1Formatted = ethers.utils.formatUnits(reserve1, token1.decimals);
+  const reserve0Formatted = Math.floor(
+    ethers.utils.formatUnits(reserve0, token0.decimals)
+  );
+  const reserve1Formatted = Math.floor(
+    ethers.utils.formatUnits(reserve1, token1.decimals)
+  );
 
   console.log(
-    `uniswapV2Pair中 ${token0.symbol}的储备量为${reserve0Formatted} ${token1.symbol}的储备量为${reserve1Formatted}`
+    `${token0.symbol}-${token1.symbol} pool: ${reserve0Formatted} ${token0.symbol} and ${reserve1Formatted} ${token1.symbol}.`
   );
 }
 
