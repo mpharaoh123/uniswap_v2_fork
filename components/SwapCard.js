@@ -329,6 +329,40 @@ export default function SwapCard({
             "Failed to process WETH operations. Please try again."
           );
         }
+      } else {
+        try {
+          const contractIn = new ethers.Contract(
+            selectedTokenIn.address,
+            ERC20_ABI,
+            signer
+          );
+          const token0Balance = await contractIn.balanceOf(account);
+          if (token0Balance.lt(amountIn)) {
+            throw new Error(`Insufficient ${selectedTokenIn.symbol} balance.`);
+          }
+
+          // Approve with explicit parameters
+          const allowance = await contractIn.allowance(
+            account,
+            uniswapRouter.address
+          );
+          if (allowance.lt(amountIn)) {
+            const approveTx = await contractIn.approve(
+              uniswapRouter.address,
+              ethers.constants.MaxUint256,
+              {
+                gasLimit: 100000,
+                gasPrice: gasPrice,
+              }
+            );
+            await approveTx.wait(1);
+          }
+        } catch (error) {
+          console.error(`${selectedTokenIn.symbol} operation error: ${error}`);
+          throw new Error(
+            `Failed to process ${selectedTokenIn.symbol} operations. Please try again.`
+          );
+        }
       }
 
       // Setup swap parameters

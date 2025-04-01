@@ -15,7 +15,6 @@ const COMMISSION_RATE_PRICE = process.env.COMMISSION_RATE;
   npx hardhat run --network localhost scripts/swapToken.js
  */
 async function main() {
-
   const [signer] = await ethers.getSigners();
   const provider = ethers.provider;
   const account = await signer.getAddress();
