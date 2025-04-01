@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import { ERC20_ABI } from "../constants/abis";
 import SwapCard from "../components/SwapCard";
 import { TOKENS } from "../constants/addresses";
+import Link from "next/link";
 
 export default function Home() {
   const { provider, account, uniswapRouter, connectWallet, signer, network } =
@@ -142,13 +143,15 @@ export default function Home() {
             <span className="ml-2 text-xl font-medium">Swap</span>
           </div>
           <div className="flex space-x-6 text-gray-400">
-            <button className="hover:text-white">Trade</button>
+            <Link href="/">
+              <p className="hover:text-white hidden md:block lg:block">Trade</p>
+            </Link>
             <button className="hover:text-white hidden md:block lg:block">
               Explore
             </button>
-            <button className="hover:text-white hidden md:block lg:block">
-              Pool
-            </button>
+            <Link href={{ pathname: "/Pools" }}>
+              <p className="hover:text-white hidden md:block lg:block">Pools</p>
+            </Link>
           </div>
         </div>
 
