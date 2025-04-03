@@ -9,6 +9,13 @@ export default function Pool() {
   const { provider, account, uniswapRouter, connectWallet, signer, network } =
     useWeb3();
   const [positions, setPositions] = useState([]);
+  const [selectedToken0, setSelectedToken0] = useState(TOKENS.WETH); // 默认Token0
+  const [selectedToken1, setSelectedToken1] = useState(TOKENS.USDT); // 默认Token1
+  const [liquidityBalance, setLiquidityBalance] = useState("0"); // 当前交易对的流动性余额
+  const [amountToken0, setAmountToken0] = useState(""); // 希望加入的Token0数量
+  const [amountToken1, setAmountToken1] = useState(""); // 希望加入的Token1数量
+  const [minAmountToken0, setMinAmountToken0] = useState(""); // Token0的最小值
+  const [minAmountToken1, setMinAmountToken1] = useState(""); // Token1的最小值
 
   useEffect(() => {
     // Fetch positions when account changes
@@ -16,6 +23,13 @@ export default function Pool() {
       fetchPositions();
     }
   }, [account]);
+
+  useEffect(() => {
+    // 当选择的交易对发生变化时，更新流动性余额
+    if (selectedToken0 && selectedToken1 && account) {
+      fetchLiquidityBalance();
+    }
+  }, [selectedToken0, selectedToken1, account]);
 
   const fetchPositions = async () => {
     try {
@@ -25,24 +39,6 @@ export default function Pool() {
       setPositions(positions);
     } catch (error) {
       console.error("Failed to fetch positions:", error);
-    }
-  };
-
-  const handleNewPosition = async () => {
-    if (!account) {
-      connectWallet();
-      return;
-    }
-
-    // Logic to add a new position
-    try {
-      // This is a placeholder function to simulate adding a new position
-      // You would replace this with actual logic to interact with your contract
-      await addNewPosition();
-      // Update positions after adding a new one
-      fetchPositions();
-    } catch (error) {
-      console.error("Failed to add new position:", error);
     }
   };
 
@@ -117,9 +113,82 @@ export default function Pool() {
               ))}
             </ul>
           )}
-          <button className="bg-yellow-500 text-black px-4 py-2 rounded-lg mt-4" onClick={handleNewPosition}>
-            + New Position
-          </button>
+          <div className="flex justify-between mt-8">
+            <button
+              className="w-full mt-4 py-4 rounded-2xl text-lg font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white"
+              onClick={() => {}}
+            >
+              Select Token0
+            </button>
+            <button
+              className="w-full mt-4 py-4 rounded-2xl text-lg font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white"
+              onClick={() => {}}
+            >
+              Select Token1
+            </button>
+          </div>
+          <div className="mt-8">
+            <p className="text-lg font-medium">Selected Pair:</p>
+            <p>{selectedToken0.symbol} - {selectedToken1.symbol}</p>
+            <p className="text-lg font-medium mt-2">Liquidity Balance:</p>
+            <p>{liquidityBalance}</p>
+          </div>
+          <div className="mt-8">
+            <div className="flex items-center">
+              <label className="block text-sm font-medium text-gray-300" htmlFor="amountToken0">
+                Amount of {selectedToken0.symbol}:
+              </label>
+              <input
+                type="text"
+                id="amountToken0"
+                value={amountToken0}
+                onChange={(e) => setAmountToken0(e.target.value)}
+                className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white ml-2"
+              />
+              <label className="block text-sm font-medium text-gray-300 ml-2" htmlFor="minAmountToken0">
+                Min Amount of {selectedToken0.symbol}:
+              </label>
+              <input
+                type="text"
+                id="minAmountToken0"
+                value={minAmountToken0}
+                onChange={(e) => setMinAmountToken0(e.target.value)}
+                className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white ml-2"
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center">
+              <label className="block text-sm font-medium text-gray-300" htmlFor="amountToken1">
+                Amount of {selectedToken1.symbol}:
+              </label>
+              <input
+                type="text"
+                id="amountToken1"
+                value={amountToken1}
+                onChange={(e) => setAmountToken1(e.target.value)}
+                className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white ml-2"
+              />
+              <label className="block text-sm font-medium text-gray-300 ml-2" htmlFor="minAmountToken1">
+                Min Amount of {selectedToken1.symbol}:
+              </label>
+              <input
+                type="text"
+                id="minAmountToken1"
+                value={minAmountToken1}
+                onChange={(e) => setMinAmountToken1(e.target.value)}
+                className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white ml-2"
+              />
+            </div>
+          </div>
+          <div className="mt-8">
+            <button
+              className="w-full mt-4 py-4 rounded-2xl text-lg font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white"
+              onClick={() => {}}
+            >
+              Add Liquidity
+            </button>
+          </div>
         </div>
       </main>
     </div>
@@ -130,9 +199,4 @@ export default function Pool() {
 const fetchYourPositions = async () => {
   // Simulate fetching positions from a contract
   return ["Position 1", "Position 2", "Position 3"];
-};
-
-const addNewPosition = async () => {
-  // Simulate adding a new position
-  console.log("Adding new position...");
 };

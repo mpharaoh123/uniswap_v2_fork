@@ -143,7 +143,7 @@ export default function Home() {
             <span className="ml-2 text-xl font-medium">Uniswap</span>
           </div>
           <div className="flex space-x-6 text-gray-400">
-            <Link href="/">
+            <Link href={{ pathname: "/" }}>
               <p className="hover:text-white hidden md:block lg:block">Trade</p>
             </Link>
             <button className="hover:text-white hidden md:block lg:block">

@@ -7,8 +7,8 @@
 
 # scripts
 1. ethers为全局变量，直接使用，不用引入
-2. 使用uniswapV2Router来addLiquidity不可行
-3. weth swap erc20成功
+2. weth usdt add liquidity成功
+3. weth/erc20 swap erc20成功
 
 # code explain
 1. getQuote时，除WETH的代币对，均通过WETH作为中间路径，用uniswapRouter查询价格
