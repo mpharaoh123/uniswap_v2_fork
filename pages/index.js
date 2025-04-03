@@ -140,7 +140,7 @@ export default function Home() {
         <div className="flex items-center space-x-6">
           <div className="flex items-center">
             <img src="/swap.jpg" alt="Uniswap Logo" className="h-8 w-8" />
-            <span className="ml-2 text-xl font-medium">Swap</span>
+            <span className="ml-2 text-xl font-medium">Uniswap</span>
           </div>
           <div className="flex space-x-6 text-gray-400">
             <Link href="/">

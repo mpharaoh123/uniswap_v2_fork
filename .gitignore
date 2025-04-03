@@ -26,12 +26,14 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # local env files
+.env*.local
 
 
 # vercel
 .vercel
 
 node_modules
+.env
 coverage
 coverage.json
 typechain
