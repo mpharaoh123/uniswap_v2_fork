@@ -9,9 +9,12 @@ const {
   WETH_ABI,
   TOKENS,
 } = require("./constants");
+const storageAddress = process.env.UserStorageData;
+const storageAbi =
+  require("../artifacts/contracts/UserStorageData.sol/UserStorageData.json").abi;
 
-const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"; // WETH地址
-const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT地址
+const token0Addr = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"; // WETH地址
+const token1Addr = "0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT地址
 
 /*
   npx hardhat run --network localhost scripts/addLiquidity.js
@@ -34,15 +37,15 @@ async function addLiquidity() {
     signer
   );
   let tx;
-  const pairAddress = await factoryContract.getPair(WETH_ADDRESS, USDT_ADDRESS);
+  const pairAddress = await factoryContract.getPair(token0Addr, token1Addr);
   if (pairAddress == ethers.constants.AddressZero) {
-    tx = await uniswapFactory.createPair(WETH_ADDRESS, USDT_ADDRESS);
+    tx = await uniswapFactory.createPair(token0Addr, token1Addr);
     await tx.wait();
   }
   console.log("pairAddress", pairAddress);
 
-  const wethContract = new ethers.Contract(WETH_ADDRESS, WETH_ABI, signer);
-  const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, signer);
+  const wethContract = new ethers.Contract(token0Addr, WETH_ABI, signer);
+  const usdtContract = new ethers.Contract(token1Addr, ERC20_ABI, signer);
   const gasPrice = await provider.getGasPrice();
 
   // 铸造 WETH 和 USDT 代币
@@ -88,8 +91,8 @@ async function addLiquidity() {
   const deadline = Math.floor(Date.now() / 1000) + 10 * 60; // 当前时间加10
 
   tx = await routerContract.addLiquidity(
-    WETH_ADDRESS,
-    USDT_ADDRESS,
+    token0Addr,
+    token1Addr,
     wethAmount,
     usdtAmount,
     0,
@@ -101,18 +104,33 @@ async function addLiquidity() {
     }
   );
   await tx.wait(1);
-  console.log("添加流动性交易已发送：", tx.hash);
+  // console.log("添加流动性交易已发送：", tx.hash);
 
-  const lpTokenContract = new ethers.Contract(pairAddress, ERC20_ABI, signer);
+  // 查询添加流动性之后的LP Tokens余额
+  const lpBalanceAfter = await lpTokenContract.balanceOf(account);
+  console.log("LP balance after adding liquidity:", lpBalanceAfter.toString());
 
-  // 查询目标账户持有的 LP 代币余额
-  const lpBalance = await lpTokenContract.balanceOf(account);
+  // 计算本次添加的流动性数量
+  const liquidityAdded = lpBalanceAfter.sub(lpBalanceBefore);
   console.log(
-    `Account ${account} has ${ethers.utils.formatUnits(
-      lpBalance,
-      18
-    )} LP tokens in the WETH-USDT pool`
+    `Liquidity added: ${ethers.utils.formatUnits(liquidityAdded, 18)}`
   );
+
+  // 记录用户添加的流动性
+  const storageContract = new ethers.Contract(
+    storageAddress,
+    storageAbi,
+    signer
+  );
+
+  tx = await storageContract.addBlockchain(pairAddress, liquidityAdded);
+  await tx.wait(1);
+
+  const transactions = await storageContract.getTransactions(
+    account,
+    pairAddress
+  );
+  console.log(`${account} ${pairAddress} liquidity records are ${transactions}`);
 }
 
 addLiquidity().catch((error) => {

@@ -1,138 +1,14 @@
 import { useState } from "react";
 import { useWeb3 } from "../context/Web3Context";
-import { ethers } from "ethers";
-import { ERC20_ABI } from "../constants/abis";
 import SwapCard from "../components/SwapCard";
-import { TOKENS } from "../constants/addresses";
 import Link from "next/link";
 
 export default function Home() {
   const { provider, account, uniswapRouter, connectWallet, signer, network } =
     useWeb3();
-  const [sellAmount, setSellAmount] = useState("0");
-  const [buyAmount, setBuyAmount] = useState("0");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
-  const [modalType, setModalType] = useState(""); // 'in' or 'out'
-  const [selectedTokenIn, setSelectedTokenIn] = useState(TOKENS.WETH);
-  const [selectedTokenOut, setSelectedTokenOut] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false); // 控制导航菜单的显示状态
 
   console.log(account);
-
-  const handleTokenSelect = (token) => {
-    if (modalType === "in") {
-      setSelectedTokenIn(token);
-    } else {
-      setSelectedTokenOut(token);
-    }
-  };
-
-  const openTokenModal = (type) => {
-    setModalType(type);
-    setIsTokenModalOpen(true);
-  };
-
-  const handleSwap = async () => {
-    if (!account) {
-      connectWallet();
-      return;
-    }
-
-    if (!selectedTokenOut) {
-      alert("Please select a token to swap to");
-      return;
-    }
-
-    if (!sellAmount || parseFloat(sellAmount) <= 0) {
-      alert("Please enter an amount to swap");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Convert amount to Wei
-      const amountIn = ethers.utils.parseEther(sellAmount);
-      const amountOutMin = ethers.utils.parseEther(buyAmount || "0");
-
-      // Create the token path for the swap
-      const path = [
-        selectedTokenIn.address || WETH_ADDRESS,
-        selectedTokenOut.address,
-      ];
-
-      // Get expected output amount
-      const expectedOutput = await getSwapQuote(amountIn, path);
-
-      // If input token is not ETH, check and approve if necessary
-      if (selectedTokenIn.address) {
-        const hasAllowance = await checkAllowance(
-          selectedTokenIn.address,
-          amountIn
-        );
-        if (!hasAllowance) {
-          const approved = await approveToken(
-            selectedTokenIn.address,
-            amountIn
-          );
-          if (!approved) {
-            throw new Error("Token approval failed");
-          }
-        }
-      }
-
-      // Execute the swap
-      let tx;
-      if (!selectedTokenIn.address) {
-        // Swapping ETH for tokens
-        tx = await uniswapRouter.swapExactETHForTokens(
-          amountOutMin,
-          path,
-          account,
-          Math.floor(Date.now() / 1000) + 60 * 20, // 20 minutes deadline
-          { value: amountIn }
-        );
-      } else {
-        // Swapping tokens for tokens
-        tx = await uniswapRouter.swapExactTokensForTokens(
-          amountIn,
-          amountOutMin,
-          path,
-          account,
-          Math.floor(Date.now() / 1000) + 60 * 20 // 20 minutes deadline
-        );
-      }
-
-      await tx.wait();
-
-      // Show success message
-      const successMessage = document.createElement("div");
-      successMessage.className =
-        "fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg";
-      successMessage.textContent = "Swap completed successfully!";
-      document.body.appendChild(successMessage);
-      setTimeout(() => successMessage.remove(), 5000);
-
-      // Reset form
-      setSellAmount("0");
-      setBuyAmount("0");
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error during swap:", error);
-
-      // Show error message
-      const errorMessage = document.createElement("div");
-      errorMessage.className =
-        "fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg";
-      errorMessage.textContent =
-        error.reason || "Swap failed. Please try again.";
-      document.body.appendChild(errorMessage);
-      setTimeout(() => errorMessage.remove(), 5000);
-
-      setIsLoading(false);
-    }
-  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -151,7 +27,9 @@ export default function Home() {
             <Link href={{ pathname: "/" }}>
               <p className="hover:text-white">Trade</p>
             </Link>
-            <button className="hover:text-white">Explore</button>
+            <Link href={{ pathname: "/Explore" }}>
+              <p className="block hover:text-white mb-4">Explore</p>
+            </Link>
             <Link href={{ pathname: "/Pools" }}>
               <p className="hover:text-white">Pools</p>
             </Link>

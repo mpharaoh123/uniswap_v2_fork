@@ -9,8 +9,8 @@ export default function Pool() {
   const { provider, account, uniswapRouter, connectWallet, signer, network } =
     useWeb3();
   const [positions, setPositions] = useState([]);
-  const [selectedToken0, setSelectedToken0] = useState(TOKENS.WETH); // 默认Token0
-  const [selectedToken1, setSelectedToken1] = useState(TOKENS.USDT); // 默认Token1
+  const [selectedTokenIn, setSelectedTokenIn] = useState(TOKENS.WETH); // 默认Token0
+  const [selectedTokenOut, setSelectedTokenOut] = useState(TOKENS.USDT); // 默认Token1
   const [liquidityBalance, setLiquidityBalance] = useState("0"); // 当前交易对的流动性余额
   const [amountToken0, setAmountToken0] = useState(""); // 希望加入的Token0数量
   const [amountToken1, setAmountToken1] = useState(""); // 希望加入的Token1数量
@@ -27,10 +27,10 @@ export default function Pool() {
 
   useEffect(() => {
     // 当选择的交易对发生变化时，更新流动性余额
-    if (selectedToken0 && selectedToken1 && account) {
-      fetchLiquidityBalance();
+    if (selectedTokenIn && selectedTokenOut && account) {
+      // fetchLiquidityBalance();
     }
-  }, [selectedToken0, selectedToken1, account]);
+  }, [selectedTokenIn, selectedTokenOut, account]);
 
   const fetchPositions = async () => {
     try {
@@ -60,7 +60,9 @@ export default function Pool() {
             <Link href={{ pathname: "/" }}>
               <p className="hover:text-white">Trade</p>
             </Link>
-            <button className="hover:text-white">Explore</button>
+            <Link href={{ pathname: "/Explore" }}>
+              <p className="block hover:text-white mb-4">Explore</p>
+            </Link>
             <Link href={{ pathname: "/Pools" }}>
               <p className="hover:text-white">Pools</p>
             </Link>
@@ -114,9 +116,9 @@ export default function Pool() {
           <Link href={{ pathname: "/" }}>
             <p className="block hover:text-white mb-4">Trade</p>
           </Link>
-          <button className="block hover:text-white mb-4" onClick={toggleMenu}>
-            Explore
-          </button>
+          <Link href={{ pathname: "/Explore" }}>
+            <p className="block hover:text-white mb-4">Explore</p>
+          </Link>
           <Link href={{ pathname: "/Pools" }}>
             <p className="block hover:text-white mb-4">Pools</p>
           </Link>
@@ -136,24 +138,26 @@ export default function Pool() {
               ))}
             </ul>
           )}
-          <div className="flex justify-between mt-8">
+          
+          <div className="flex justify-between mt-2">
             <button
-              className="w-full mt-4 py-4 rounded-2xl text-lg font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white"
+              className="w-48 mt-4 py-2 rounded-2xl text-base font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white mx-1"
               onClick={() => {}}
             >
               Select Token0
             </button>
             <button
-              className="w-full mt-4 py-4 rounded-2xl text-lg font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white"
+              className="w-48 mt-4 py-2 rounded-2xl text-base font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white mx-1"
               onClick={() => {}}
             >
               Select Token1
             </button>
           </div>
+
           <div className="mt-8">
             <p className="text-lg font-medium">Selected Pair:</p>
             <p>
-              {selectedToken0.symbol} - {selectedToken1.symbol}
+              {selectedTokenIn.symbol} - {selectedTokenOut.symbol}
             </p>
             <p className="text-lg font-medium mt-2">Liquidity Balance:</p>
             <p>{liquidityBalance}</p>
@@ -164,7 +168,7 @@ export default function Pool() {
                 className="block text-sm font-medium text-gray-300"
                 htmlFor="amountToken0"
               >
-                Amount of {selectedToken0.symbol}:
+                Amount of {selectedTokenIn.symbol}:
               </label>
               <input
                 type="text"
@@ -177,7 +181,7 @@ export default function Pool() {
                 className="block text-sm font-medium text-gray-300 ml-2"
                 htmlFor="minAmountToken0"
               >
-                Min Amount of {selectedToken0.symbol}:
+                Min Amount of {selectedTokenIn.symbol}:
               </label>
               <input
                 type="text"
@@ -194,7 +198,7 @@ export default function Pool() {
                 className="block text-sm font-medium text-gray-300"
                 htmlFor="amountToken1"
               >
-                Amount of {selectedToken1.symbol}:
+                Amount of {selectedTokenOut.symbol}:
               </label>
               <input
                 type="text"
@@ -207,7 +211,7 @@ export default function Pool() {
                 className="block text-sm font-medium text-gray-300 ml-2"
                 htmlFor="minAmountToken1"
               >
-                Min Amount of {selectedToken1.symbol}:
+                Min Amount of {selectedTokenOut.symbol}:
               </label>
               <input
                 type="text"
