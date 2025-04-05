@@ -16,6 +16,7 @@ export default function Home() {
   const [modalType, setModalType] = useState(""); // 'in' or 'out'
   const [selectedTokenIn, setSelectedTokenIn] = useState(TOKENS.WETH);
   const [selectedTokenOut, setSelectedTokenOut] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // 控制导航菜单的显示状态
 
   console.log(account);
 
@@ -133,6 +134,10 @@ export default function Home() {
     }
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <div className="min-h-screen bg-[#191B1F] text-white">
       {/* Navigation Bar */}
@@ -142,21 +147,22 @@ export default function Home() {
             <img src="/swap.jpg" alt="Uniswap Logo" className="h-8 w-8" />
             <span className="ml-2 text-xl font-medium">Uniswap</span>
           </div>
-          <div className="flex space-x-6 text-gray-400">
+          <div className="flex space-x-6 text-gray-400 md:flex hidden">
             <Link href={{ pathname: "/" }}>
-              <p className="hover:text-white hidden md:block lg:block">Trade</p>
+              <p className="hover:text-white">Trade</p>
             </Link>
-            <button className="hover:text-white hidden md:block lg:block">
-              Explore
-            </button>
+            <button className="hover:text-white">Explore</button>
             <Link href={{ pathname: "/Pools" }}>
-              <p className="hover:text-white hidden md:block lg:block">Pools</p>
+              <p className="hover:text-white">Pools</p>
             </Link>
           </div>
         </div>
 
         <div className="flex items-center space-x-4">
-          <button className="px-4 py-2 rounded-full bg-[#191B1F] border border-gray-600 hover:border-gray-400">
+          <button
+            className="px-4 py-2 rounded-full bg-[#191B1F] border border-gray-600 hover:border-gray-400 md:hidden"
+            onClick={toggleMenu}
+          >
             <svg
               className="w-5 h-5"
               fill="none"
@@ -193,27 +199,33 @@ export default function Home() {
         </div>
       </nav>
 
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="bg-[#191B1F] p-4 md:hidden">
+          <Link href={{ pathname: "/" }}>
+            <p className="block hover:text-white mb-4">Trade</p>
+          </Link>
+          <button className="block hover:text-white mb-4" onClick={toggleMenu}>
+            Explore
+          </button>
+          <Link href={{ pathname: "/Pools" }}>
+            <p className="block hover:text-white mb-4">Pools</p>
+          </Link>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="max-w-[480px] mx-auto mt-20">
-        {/* <h1 className="text-6xl font-bold text-center mb-8">
-          Swap anytime,
-          <br />
-          anywhere.
-        </h1> */}
         <div className="bg-[#212429] rounded-3xl p-4 shadow-lg">
-          {/* Swap Card */}
-          <div className=" bg-[#191B1F] p-4 ">
-            <SwapCard
-              provider={provider}
-              account={account}
-              uniswapRouter={uniswapRouter}
-              signer={signer}
-              network={network}
-            />
-          </div>
+          <SwapCard
+            provider={provider}
+            account={account}
+            uniswapRouter={uniswapRouter}
+            signer={signer}
+            network={network}
+          />
         </div>
 
-        {/* Bottom Text */}
         <p className="text-center text-gray-400 mt-6">
           The largest onchain marketplace. Buy and sell crypto
           <br />
