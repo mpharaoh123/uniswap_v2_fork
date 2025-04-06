@@ -1,3 +1,13 @@
+export const UNISWAP_ROUTER_ABI =
+  require("@uniswap/v2-periphery/build/IUniswapV2Router02.json").abi;
+export const WETH_ABI = require("@uniswap/v2-periphery/build/WETH9.json").abi;
+export const ERC20_ABI = require("@uniswap/v2-core/build/IERC20.json").abi;
+export const UNISWAP_PAIR_ABI =
+  require("@uniswap/v2-core/build/IUniswapV2Pair.json").abi;
+export const UNISWAP_FACTORY_ABI =
+  require("@uniswap/v2-core/build/IUniswapV2Factory.json").abi;
+export const storageAbi = require("../artifacts/contracts/UserStorageData.sol/UserStorageData.json").abi;
+
 // constants/addresses.js
 export const UNISWAP_ADDRESSES = {
   V2_ROUTER: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",

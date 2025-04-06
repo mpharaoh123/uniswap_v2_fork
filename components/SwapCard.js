@@ -1,14 +1,8 @@
 // components/SwapCard.js
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import { TOKENS, UNISWAP_ADDRESSES } from "../constants/addresses";
+import { TOKENS, UNISWAP_ADDRESSES,ERC20_ABI } from "../constants/addresses";
 import TokenModal from "./TokenModal";
-
-const ERC20_ABI = [
-  "function balanceOf(address) view returns (uint256)",
-  "function approve(address spender, uint256 amount) returns (bool)",
-  "function allowance(address owner, address spender) view returns (uint256)",
-];
 
 const COMMISSION_ADDRESS_ADMIN = process.env.NEXT_PUBLIC_COMMISSION_ADDRESS;
 const COMMISSION_RATE_PRICE = process.env.NEXT_PUBLIC_COMMISSION_RATE;
@@ -137,68 +131,6 @@ export default function SwapCard({
     "function withdraw(uint256 wad) external",
   ];
 
-  const wrapETH = async (amount) => {
-    if (!signer || !provider) {
-      throw new Error("Wallet not connected");
-    }
-
-    try {
-      const wethContract = new ethers.Contract(
-        TOKENS.WETH.address,
-        WETH_ABI,
-        signer
-      );
-
-      // Convert amount to Wei
-      const amountInWei = ethers.utils.parseEther(amount.toString());
-
-      // Check ETH balance
-      const ethBalance = await provider.getBalance(account);
-      if (ethBalance.lt(amountInWei)) {
-        throw new Error("Insufficient ETH balance");
-      }
-
-      // Estimate gas
-      const gasLimit = await wethContract.estimateGas.deposit({
-        value: amountInWei,
-      });
-
-      // Get gas price
-      const gasPrice = await provider.getGasPrice();
-
-      // Add 20% buffer to gas limit
-      const adjustedGasLimit = gasLimit.mul(120).div(100);
-
-      console.log("Wrapping ETH with params:", {
-        amount: amount,
-        gasLimit: adjustedGasLimit.toString(),
-        gasPrice: ethers.utils.formatUnits(gasPrice, "gwei") + " gwei",
-      });
-
-      // Execute deposit
-      const tx = await wethContract.deposit({
-        value: amountInWei,
-        gasLimit: adjustedGasLimit,
-        gasPrice: gasPrice,
-      });
-
-      console.log("Wrap transaction submitted:", tx.hash);
-      const receipt = await tx.wait();
-      console.log("Wrap transaction confirmed:", receipt);
-
-      return true;
-    } catch (error) {
-      console.error("Detailed wrap error:", error);
-      if (error.reason) {
-        throw new Error(`Wrap failed: ${error.reason}`);
-      } else if (error.data?.message) {
-        throw new Error(`Wrap failed: ${error.data.message}`);
-      } else {
-        throw new Error(`Wrap failed: ${error.message || "Unknown error"}`);
-      }
-    }
-  };
-
   const resetConnection = async () => {
     try {
       if (window.ethereum) {
@@ -240,8 +172,6 @@ export default function SwapCard({
           throw new Error("Failed to reconnect to network");
         }
         // Update provider and signer
-        setProvider(newConnection.provider);
-        setSigner(newConnection.signer);
       }
 
       // Check gas price

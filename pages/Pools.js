@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useWeb3 } from "../context/Web3Context";
-import { ethers } from "ethers";
-import { ERC20_ABI } from "../constants/abis";
 import { TOKENS } from "../constants/addresses";
 import Link from "next/link";
+import AddLiquidity from "../components/AddLiquidity";
 
 export default function Pool() {
   const { provider, account, uniswapRouter, connectWallet, signer, network } =
@@ -45,6 +44,20 @@ export default function Pool() {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleAddLiquidityClick = () => {
+    // Trigger the AddLiquidity component
+    // Pass the necessary props to the AddLiquidity component
+    return (
+      <AddLiquidity
+        signer={signer}
+        token0Addr={selectedTokenIn.address}
+        token1Addr={selectedTokenOut.address}
+        token0Amount={amountToken0}
+        token1Amount={amountToken1}
+      />
+    );
   };
 
   return (
@@ -138,7 +151,7 @@ export default function Pool() {
               ))}
             </ul>
           )}
-          
+
           <div className="flex justify-between mt-2">
             <button
               className="w-48 mt-4 py-2 rounded-2xl text-base font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white mx-1"
@@ -225,7 +238,7 @@ export default function Pool() {
           <div className="mt-8">
             <button
               className="w-full mt-4 py-4 rounded-2xl text-lg font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white"
-              onClick={() => {}}
+              onClick={handleAddLiquidityClick}
             >
               Add Liquidity
             </button>
