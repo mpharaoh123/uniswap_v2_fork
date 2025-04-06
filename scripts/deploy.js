@@ -18,18 +18,34 @@ async function main() {
   });
   await userStorageData.deployed();
   console.log(`UserStorageData deployed to ${userStorageData.address}`);
+
+  // 构造要写入的数据
   const data = `UserStorageData=${userStorageData.address}`;
 
-  const writeFile = promisify(fs.appendFile);
+  // 读取.env文件内容
   const filePath = ".env";
-  return writeFile(filePath, "\n" + data)
-    .then(() => {
-      console.log("Addresses recorded.");
-    })
-    .catch((error) => {
-      console.error("Error logging addresses:", error);
-      throw error;
-    });
+  let fileContent = "";
+  try {
+    fileContent = fs.readFileSync(filePath, "utf8");
+  } catch (error) {
+    // 如果文件不存在，直接写入新的地址
+    console.log(".env file not found, creating a new one.");
+  }
+
+  // 检查是否已经存在UserStorageData地址
+  if (fileContent.includes("UserStorageData=")) {
+    // 替换现有的UserStorageData地址
+    const updatedContent = fileContent.replace(
+      /UserStorageData=.*\n?/,
+      `${data}\n`
+    );
+    fs.writeFileSync(filePath, updatedContent);
+    console.log("Existing UserStorageData address replaced.");
+  } else {
+    // 如果不存在，追加新的地址
+    fs.appendFileSync(filePath, `\n${data}`);
+    console.log("New UserStorageData address added.");
+  }
 }
 
 /*
