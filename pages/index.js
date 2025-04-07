@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useWeb3 } from "../context/Web3Context";
 import SwapCard from "../components/SwapCard";
 import Link from "next/link";
+import AddLiquidity from "../components/AddLiquidity";
 
 export default function Home() {
   const { provider, account, uniswapRouter, connectWallet, signer, network } =
@@ -103,6 +104,14 @@ export default function Home() {
             network={network}
           />
         </div>
+
+        {/* <AddLiquidity
+            signer={signer}
+            token0Addr={token0Addr}
+            token1Addr={token1Addr}
+            token0Amount={token0Amount}
+            token1Amount={token1Amount}
+          /> */}
 
         <p className="text-center text-gray-400 mt-6">
           The largest onchain marketplace. Buy and sell crypto

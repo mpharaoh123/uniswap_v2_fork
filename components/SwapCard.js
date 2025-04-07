@@ -405,7 +405,6 @@ export default function SwapCard({
               setModalType("in");
               setIsModalOpen(true);
             }}
-            disabled
             className="flex items-center space-x-2 bg-[#191B1F] px-3 py-1 rounded-full hover:bg-opacity-80"
           >
             <img

@@ -3,6 +3,7 @@ import { useWeb3 } from "../context/Web3Context";
 import { TOKENS } from "../constants/addresses";
 import Link from "next/link";
 import AddLiquidity from "../components/AddLiquidity";
+import TokenModal from "../components/TokenModal";
 
 export default function Pool() {
   const { provider, account, uniswapRouter, connectWallet, signer, network } =
@@ -16,6 +17,9 @@ export default function Pool() {
   const [minAmountToken0, setMinAmountToken0] = useState(""); // Token0的最小值
   const [minAmountToken1, setMinAmountToken1] = useState(""); // Token1的最小值
   const [isMenuOpen, setIsMenuOpen] = useState(false); // 控制导航菜单的显示状态
+  const [isAddLiquidityModalOpen, setIsAddLiquidityModalOpen] = useState(false); // 控制添加流动性模态框的显示状态
+  const [isTokenModalOpen, setIsTokenModalOpen] = useState(false); // 控制代币选择模态框的显示状态
+  const [modalType, setModalType] = useState(""); // 当前模态框类型（"in" 或 "out"）
 
   useEffect(() => {
     // Fetch positions when account changes
@@ -47,17 +51,31 @@ export default function Pool() {
   };
 
   const handleAddLiquidityClick = () => {
-    // Trigger the AddLiquidity component
-    // Pass the necessary props to the AddLiquidity component
-    return (
-      <AddLiquidity
-        signer={signer}
-        token0Addr={selectedTokenIn.address}
-        token1Addr={selectedTokenOut.address}
-        token0Amount={amountToken0}
-        token1Amount={amountToken1}
-      />
-    );
+    setIsAddLiquidityModalOpen(true);
+  };
+
+  const closeAddLiquidityModal = () => {
+    setIsAddLiquidityModalOpen(false);
+  };
+
+  const handleTokenSelect = (token) => {
+    if (modalType === "in") {
+      if (token.address === selectedTokenOut.address) {
+        setSelectedTokenOut(selectedTokenIn);
+      }
+      setSelectedTokenIn(token);
+    } else {
+      if (token.address === selectedTokenIn.address) {
+        setSelectedTokenIn(selectedTokenOut);
+      }
+      setSelectedTokenOut(token);
+    }
+    setIsTokenModalOpen(false);
+  };
+
+  const openTokenModal = (type) => {
+    setModalType(type);
+    setIsTokenModalOpen(true);
   };
 
   return (
@@ -154,16 +172,59 @@ export default function Pool() {
 
           <div className="flex justify-between mt-2">
             <button
-              className="w-48 mt-4 py-2 rounded-2xl text-base font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white mx-1"
-              onClick={() => {}}
+              onClick={() => {
+                setModalType("in");
+                setIsTokenModalOpen(true);
+              }}
+              className="flex items-center space-x-2 bg-[#191B1F] px-3 py-1 rounded-full hover:bg-opacity-80"
             >
-              Select Token0
+              {/* todo webp文件和svg文件 */}
+              <img
+                src={`/tokens/${selectedTokenIn.symbol.toLowerCase()}.webp`}
+                alt={selectedTokenIn.symbol}
+                className="w-6 h-6 rounded-full"
+              />
+              <span className="text-white">{selectedTokenIn.symbol}</span>
+              <svg
+                className="w-4 h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
             </button>
             <button
-              className="w-48 mt-4 py-2 rounded-2xl text-base font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white mx-1"
-              onClick={() => {}}
+              onClick={() => {
+                setModalType("out");
+                setIsTokenModalOpen(true);
+              }}
+              className="flex items-center space-x-2 bg-[#191B1F] px-3 py-1 rounded-full hover:bg-opacity-80"
             >
-              Select Token1
+              <img
+                src={`/tokens/${selectedTokenOut.symbol.toLowerCase()}.svg`}
+                alt={selectedTokenOut.symbol}
+                className="w-6 h-6 rounded-full"
+              />
+              <span className="text-white">{selectedTokenOut.symbol}</span>
+              <svg
+                className="w-4 h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
             </button>
           </div>
 
@@ -245,6 +306,28 @@ export default function Pool() {
           </div>
         </div>
       </main>
+
+      {/* Add Liquidity Modal */}
+      {isAddLiquidityModalOpen && (
+        <AddLiquidity
+          signer={signer}
+          token0Addr={selectedTokenIn.address}
+          token1Addr={selectedTokenOut.address}
+          token0Amount={amountToken0}
+          token1Amount={amountToken1}
+          onClose={closeAddLiquidityModal}
+        />
+      )}
+
+      {/* Token Selection Modal */}
+      {isTokenModalOpen && (
+        <TokenModal
+          isOpen={isTokenModalOpen}
+          onClose={() => setIsTokenModalOpen(false)}
+          onSelect={handleTokenSelect}
+          excludeToken={modalType === "in" ? selectedTokenOut : selectedTokenIn}
+        />
+      )}
     </div>
   );
 }
