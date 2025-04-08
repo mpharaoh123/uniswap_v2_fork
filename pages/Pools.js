@@ -1,16 +1,25 @@
-import { useState, useEffect } from "react";
-import { useWeb3 } from "../context/Web3Context";
-import { TOKENS } from "../constants/addresses";
+import { ethers } from "ethers";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import AddLiquidity from "../components/AddLiquidity";
 import TokenModal from "../components/TokenModal";
+import { storageAbi, TOKENS } from "../constants/addresses";
+import { useWeb3 } from "../context/Web3Context";
 
 export default function Pool() {
-  const { provider, account, uniswapRouter, connectWallet, signer, network } =
-    useWeb3();
+  const {
+    provider,
+    account,
+    uniswapRouter,
+    connectWallet,
+    signer,
+    network,
+    factoryContract,
+  } = useWeb3();
   const [positions, setPositions] = useState([]);
   const [selectedTokenIn, setSelectedTokenIn] = useState(TOKENS.WETH); // 默认Token0
   const [selectedTokenOut, setSelectedTokenOut] = useState(TOKENS.USDT); // 默认Token1
+  const [liquidityMap, setLiquidityMap] = useState(new Map()); // 该账户的所有交易对和流动性
   const [liquidityBalance, setLiquidityBalance] = useState("0"); // 当前交易对的流动性余额
   const [amountToken0, setAmountToken0] = useState(""); // 希望加入的Token0数量
   const [amountToken1, setAmountToken1] = useState(""); // 希望加入的Token1数量
@@ -22,34 +31,64 @@ export default function Pool() {
   const [modalType, setModalType] = useState(""); // 当前模态框类型（"in" 或 "out"）
 
   useEffect(() => {
-    // 当选择的交易对发生变化时，更新流动性余额
-    if (selectedTokenIn && selectedTokenOut && account) {
-      fetchLiquidityBalance();
-    }
-  }, [selectedTokenIn, selectedTokenOut, account]);
+    const fetchPairLiquidity = async () => {
+      if (!selectedTokenIn || !selectedTokenOut || !account) return;
+      try {
+        const pairAddress = await factoryContract.getPair(
+          selectedTokenIn.address,
+          selectedTokenOut.address
+        );
 
-  const fetchLiquidityBalance = async (userAddress, pairAddress) => {
-    try {
-      const storageContract = new ethers.Contract(
-        process.env.UserStorageData,
-        storageAbi.abi,
-        signer
-      );
-      const transactions = await contract.getTransactions(
-        userAddress,
-        pairAddress
-      );
-      let totalLiquidity = transactions.reduce((sum, transaction) => {
-        return sum + transaction.liquidityAmount;
-      }, 0);
+        const pairLiquiditySum = liquidityMap.get(pairAddress.toLowerCase());
 
-      totalLiquidity = ethers.utils.formatUnits(totalLiquidity, "ether");
-      totalLiquidity = parseFloat(totalLiquidity).toFixed(2);
-      setLiquidityBalance(totalLiquidity);
-    } catch (error) {
-      console.error("Failed to liquidity balance:", error);
-    }
-  };
+        setLiquidityBalance(
+          pairLiquiditySum ? pairLiquiditySum.toString() : "0"
+        );
+
+        console.log(
+          `Liquidity for pair ${pairAddress}: ${
+            pairLiquiditySum ? pairLiquiditySum.toString() : "0"
+          } Wei`
+        );
+      } catch (error) {
+        console.error("Failed to get pair address:", error);
+      }
+    };
+    fetchPairLiquidity();
+  }, [selectedTokenIn, selectedTokenOut, account, liquidityMap]);
+
+  useEffect(() => {
+    const fetchLiquidityBalance = async () => {
+      try {
+        const storageContract = new ethers.Contract(
+          process.env.UserStorageData,
+          storageAbi.abi,
+          signer
+        );
+        const transactions = await storageContract.getTransactions(account);
+
+        const liquidityMap = new Map();
+        transactions.forEach((transaction) => {
+          const pairAddress = transaction.pairAddress.toLowerCase();
+          const liquidityAmount = transaction.liquidityAmount;
+          if (liquidityMap.has(pairAddress)) {
+            liquidityMap.set(
+              pairAddress,
+              liquidityMap.get(pairAddress).add(liquidityAmount)
+            );
+          } else {
+            liquidityMap.set(pairAddress, liquidityAmount);
+          }
+        });
+        // 更新状态
+        setLiquidityMap(new Map(liquidityMap));
+        console.log("Liquidity Map:", Array.from(liquidityMap.entries()));
+      } catch (error) {
+        console.error("Failed to fetch liquidity balance:", error);
+      }
+    };
+    fetchLiquidityBalance();
+  }, [account]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
