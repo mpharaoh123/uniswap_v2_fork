@@ -22,27 +22,32 @@ export default function Pool() {
   const [modalType, setModalType] = useState(""); // 当前模态框类型（"in" 或 "out"）
 
   useEffect(() => {
-    // Fetch positions when account changes
-    if (account) {
-      fetchPositions();
-    }
-  }, [account]);
-
-  useEffect(() => {
     // 当选择的交易对发生变化时，更新流动性余额
     if (selectedTokenIn && selectedTokenOut && account) {
-      // fetchLiquidityBalance();
+      fetchLiquidityBalance();
     }
   }, [selectedTokenIn, selectedTokenOut, account]);
 
-  const fetchPositions = async () => {
+  const fetchLiquidityBalance = async (userAddress, pairAddress) => {
     try {
-      // This is a placeholder function to simulate fetching positions
-      // You would replace this with actual logic to fetch positions from your contract
-      const positions = await fetchYourPositions();
-      setPositions(positions);
+      const storageContract = new ethers.Contract(
+        process.env.UserStorageData,
+        storageAbi.abi,
+        signer
+      );
+      const transactions = await contract.getTransactions(
+        userAddress,
+        pairAddress
+      );
+      let totalLiquidity = transactions.reduce((sum, transaction) => {
+        return sum + transaction.liquidityAmount;
+      }, 0);
+
+      totalLiquidity = ethers.utils.formatUnits(totalLiquidity, "ether");
+      totalLiquidity = parseFloat(totalLiquidity).toFixed(2);
+      setLiquidityBalance(totalLiquidity);
     } catch (error) {
-      console.error("Failed to fetch positions:", error);
+      console.error("Failed to liquidity balance:", error);
     }
   };
 
@@ -331,9 +336,3 @@ export default function Pool() {
     </div>
   );
 }
-
-// Placeholder functions to simulate fetching and adding positions
-const fetchYourPositions = async () => {
-  // Simulate fetching positions from a contract
-  return ["Position 1", "Position 2", "Position 3"];
-};

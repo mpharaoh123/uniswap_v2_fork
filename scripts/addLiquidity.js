@@ -199,13 +199,12 @@ async function addLiquidity() {
   tx = await storageContract.addBlockchain(pairAddress, liquidityAdded);
   await tx.wait();
 
-  const transactions = await storageContract.getTransactions(
-    account,
-    pairAddress
-  );
-  console.log(
-    `${account} ${pairAddress} liquidity records are ${transactions}`
-  );
+  const transactions = await storageContract.getTransactions(account);
+  transactions.forEach((transaction, index) => {
+    console.log(`Transaction ${index + 1}:`);
+    console.log(`  pairAddress: ${transaction.pairAddress}`);
+    console.log(`  liquidityAmount: ${transaction.liquidityAmount}`);
+  });
 }
 
 addLiquidity().catch((error) => {
