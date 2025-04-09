@@ -1,6 +1,10 @@
 const fs = require("fs");
 const { promisify } = require("util");
 
+/*
+  npx hardhat run --network localhost scripts/deploy.js
+*/
+
 async function main() {
   const gasPrice = await ethers.provider.getGasPrice();
   const block = await ethers.provider.getBlock("latest");
@@ -20,7 +24,7 @@ async function main() {
   console.log(`UserStorageData deployed to ${userStorageData.address}`);
 
   // 构造要写入的数据
-  const data = `UserStorageData=${userStorageData.address}`;
+  const data = `NEXT_PUBLIC_STORAGE_ADDRESS=${userStorageData.address}`;
 
   // 读取.env文件内容
   const filePath = ".env";
@@ -33,24 +37,21 @@ async function main() {
   }
 
   // 检查是否已经存在UserStorageData地址
-  if (fileContent.includes("UserStorageData=")) {
+  if (fileContent.includes("NEXT_PUBLIC_STORAGE_ADDRESS=")) {
     // 替换现有的UserStorageData地址
     const updatedContent = fileContent.replace(
-      /UserStorageData=.*\n?/,
-      `${data}\n`
+      /NEXT_PUBLIC_STORAGE_ADDRESS=.*\n?/,
+      `${data}`
     );
     fs.writeFileSync(filePath, updatedContent);
-    console.log("Existing UserStorageData address replaced.");
+    console.log("Existing NEXT_PUBLIC_STORAGE_ADDRESS replaced.");
   } else {
     // 如果不存在，追加新的地址
     fs.appendFileSync(filePath, `\n${data}`);
-    console.log("New UserStorageData address added.");
+    console.log("New NEXT_PUBLIC_STORAGE_ADDRESS added.");
   }
 }
 
-/*
-   npx hardhat run --network localhost scripts/deploy.js
-  */
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;

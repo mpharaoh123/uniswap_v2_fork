@@ -3,19 +3,20 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import AddLiquidity from "../components/AddLiquidity";
 import TokenModal from "../components/TokenModal";
-import { storageAbi, TOKENS } from "../constants/addresses";
+import {
+  STORAGE_ABI,
+  UNISWAP_FACTORY_ABI,
+  UNISWAP_ADDRESSES,
+  TOKENS,
+} from "../constants/addresses";
 import { useWeb3 } from "../context/Web3Context";
 
+const STORAGE_ADDRESS = process.env.NEXT_PUBLIC_STORAGE_ADDRESS;
+console.log("0000", STORAGE_ADDRESS);
+
 export default function Pool() {
-  const {
-    provider,
-    account,
-    uniswapRouter,
-    connectWallet,
-    signer,
-    network,
-    factoryContract,
-  } = useWeb3();
+  const { provider, account, uniswapRouter, connectWallet, signer, network } =
+    useWeb3();
   const [positions, setPositions] = useState([]);
   const [selectedTokenIn, setSelectedTokenIn] = useState(TOKENS.WETH); // 默认Token0
   const [selectedTokenOut, setSelectedTokenOut] = useState(TOKENS.USDT); // 默认Token1
@@ -31,38 +32,11 @@ export default function Pool() {
   const [modalType, setModalType] = useState(""); // 当前模态框类型（"in" 或 "out"）
 
   useEffect(() => {
-    const fetchPairLiquidity = async () => {
-      if (!selectedTokenIn || !selectedTokenOut || !account) return;
-      try {
-        const pairAddress = await factoryContract.getPair(
-          selectedTokenIn.address,
-          selectedTokenOut.address
-        );
-
-        const pairLiquiditySum = liquidityMap.get(pairAddress.toLowerCase());
-
-        setLiquidityBalance(
-          pairLiquiditySum ? pairLiquiditySum.toString() : "0"
-        );
-
-        console.log(
-          `Liquidity for pair ${pairAddress}: ${
-            pairLiquiditySum ? pairLiquiditySum.toString() : "0"
-          } Wei`
-        );
-      } catch (error) {
-        console.error("Failed to get pair address:", error);
-      }
-    };
-    fetchPairLiquidity();
-  }, [selectedTokenIn, selectedTokenOut, account, liquidityMap]);
-
-  useEffect(() => {
     const fetchLiquidityBalance = async () => {
       try {
         const storageContract = new ethers.Contract(
-          process.env.UserStorageData,
-          storageAbi.abi,
+          STORAGE_ADDRESS,
+          STORAGE_ABI,
           signer
         );
         const transactions = await storageContract.getTransactions(account);
@@ -89,6 +63,37 @@ export default function Pool() {
     };
     fetchLiquidityBalance();
   }, [account]);
+
+  useEffect(() => {
+    const fetchPairLiquidity = async () => {
+      if (!selectedTokenIn || !selectedTokenOut || !account) return;
+      try {
+        const factoryContract = new ethers.Contract(
+          UNISWAP_ADDRESSES.FACTORY,
+          UNISWAP_FACTORY_ABI,
+          signer
+        );
+        const pairAddress = await factoryContract.getPair(
+          selectedTokenIn.address,
+          selectedTokenOut.address
+        );
+
+        const pairLiquiditySum = liquidityMap.get(pairAddress.toLowerCase());
+        setLiquidityBalance(
+          pairLiquiditySum ? pairLiquiditySum.toString() : "0"
+        );
+
+        console.log(
+          `Liquidity for pair ${pairAddress}: ${
+            pairLiquiditySum ? pairLiquiditySum.toString() : "0"
+          } Wei`
+        );
+      } catch (error) {
+        console.error("Failed to get pair address:", error);
+      }
+    };
+    fetchPairLiquidity();
+  }, [selectedTokenIn, selectedTokenOut, account, liquidityMap]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);

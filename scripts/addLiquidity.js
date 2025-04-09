@@ -22,10 +22,7 @@ async function addLiquidity() {
   const account = await signer.getAddress();
 
   const token0 = TOKENS["WETH"];
-  const token1 = TOKENS["LINK"];
-
-  // const token0Addr = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"; // WETH地址
-  // const token1Addr = "0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT地址
+  const token1 = TOKENS["USDT"];
 
   const token0Addr = token0.address;
   const token1Addr = token1.address;

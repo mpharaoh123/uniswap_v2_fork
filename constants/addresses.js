@@ -6,7 +6,8 @@ export const UNISWAP_PAIR_ABI =
   require("@uniswap/v2-core/build/IUniswapV2Pair.json").abi;
 export const UNISWAP_FACTORY_ABI =
   require("@uniswap/v2-core/build/IUniswapV2Factory.json").abi;
-export const storageAbi = require("../artifacts/contracts/UserStorageData.sol/UserStorageData.json").abi;
+export const STORAGE_ABI =
+  require("../artifacts/contracts/UserStorageData.sol/UserStorageData.json").abi;
 
 // constants/addresses.js
 export const UNISWAP_ADDRESSES = {
