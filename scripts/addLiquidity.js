@@ -8,7 +8,7 @@ const {
   WETH_ABI,
   TOKENS,
 } = require("./constants");
-const storageAddress = process.env.UserStorageData;
+const storageAddress = process.env.NEXT_PUBLIC_STORAGE_ADDRESS;
 const storageAbi =
   require("../artifacts/contracts/UserStorageData.sol/UserStorageData.json").abi;
 
@@ -21,8 +21,8 @@ async function addLiquidity() {
   const provider = ethers.provider;
   const account = await signer.getAddress();
 
-  const token0 = TOKENS["WETH"];
-  const token1 = TOKENS["USDT"];
+  const token0 = TOKENS["UNI"];
+  const token1 = TOKENS["WETH"];
 
   const token0Addr = token0.address;
   const token1Addr = token1.address;
@@ -42,6 +42,7 @@ async function addLiquidity() {
   let tx;
   const pairAddress = await factoryContract.getPair(token0Addr, token1Addr);
   if (pairAddress == ethers.constants.AddressZero) {
+    //createPair 函数会自动对 token0Addr 和 token1Addr 进行排序
     tx = await uniswapFactory.createPair(token0Addr, token1Addr);
     await tx.wait();
   }
@@ -197,7 +198,7 @@ async function addLiquidity() {
   await tx.wait();
 
   const transactions = await storageContract.getTransactions(account);
-  console.log(`account: ${account}`);  
+  console.log(`account: ${account}`);
   transactions.forEach((transaction, index) => {
     console.log(`Transaction ${index + 1}:`);
     console.log(`  pairAddress: ${transaction.pairAddress}`);

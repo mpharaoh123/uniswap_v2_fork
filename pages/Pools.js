@@ -6,13 +6,14 @@ import TokenModal from "../components/TokenModal";
 import {
   STORAGE_ABI,
   UNISWAP_FACTORY_ABI,
+  UNISWAP_PAIR_ABI,
   UNISWAP_ADDRESSES,
+  ERC20_ABI,
   TOKENS,
 } from "../constants/addresses";
 import { useWeb3 } from "../context/Web3Context";
 
 const STORAGE_ADDRESS = process.env.NEXT_PUBLIC_STORAGE_ADDRESS;
-console.log("0000", STORAGE_ADDRESS);
 
 export default function Pool() {
   const { provider, account, uniswapRouter, connectWallet, signer, network } =
@@ -24,8 +25,6 @@ export default function Pool() {
   const [liquidityBalance, setLiquidityBalance] = useState("0"); // 当前交易对的流动性余额
   const [amountToken0, setAmountToken0] = useState(""); // 希望加入的Token0数量
   const [amountToken1, setAmountToken1] = useState(""); // 希望加入的Token1数量
-  const [minAmountToken0, setMinAmountToken0] = useState(""); // Token0的最小值
-  const [minAmountToken1, setMinAmountToken1] = useState(""); // Token1的最小值
   const [isMenuOpen, setIsMenuOpen] = useState(false); // 控制导航菜单的显示状态
   const [isAddLiquidityModalOpen, setIsAddLiquidityModalOpen] = useState(false); // 控制添加流动性模态框的显示状态
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false); // 控制代币选择模态框的显示状态
@@ -41,27 +40,69 @@ export default function Pool() {
         );
         const transactions = await storageContract.getTransactions(account);
 
+        if (transactions.length === 0) {
+          console.log("No transactions found for this account.");
+          setLiquidityMap(new Map());
+          return;
+        }
+
         const liquidityMap = new Map();
-        transactions.forEach((transaction) => {
+        for (const transaction of transactions) {
           const pairAddress = transaction.pairAddress.toLowerCase();
           const liquidityAmount = transaction.liquidityAmount;
+          const pairContract = new ethers.Contract(
+            pairAddress,
+            UNISWAP_PAIR_ABI,
+            signer
+          );
+
+          // 获取 token0 和 token1 地址
+          const token0Address = await pairContract.token0();
+          const token1Address = await pairContract.token1();
+
+          // 创建 token0 和 token1 的合约实例
+          const token0Contract = new ethers.Contract(
+            token0Address,
+            ERC20_ABI,
+            signer
+          );
+          const token1Contract = new ethers.Contract(
+            token1Address,
+            ERC20_ABI,
+            signer
+          );
+
+          // 获取 token0 和 token1 的 symbol
+          const token0Symbol = await token0Contract.symbol();
+          const token1Symbol = await token1Contract.symbol();
+
+          const pairInfo = {
+            token0: { address: token0Address, symbol: token0Symbol },
+            token1: { address: token1Address, symbol: token1Symbol },
+            pairAddress,
+            liquidityAmount,
+          };
+
           if (liquidityMap.has(pairAddress)) {
-            liquidityMap.set(
-              pairAddress,
-              liquidityMap.get(pairAddress).add(liquidityAmount)
-            );
+            const existingPairInfo = liquidityMap.get(pairAddress);
+            existingPairInfo.liquidityAmount =
+              existingPairInfo.liquidityAmount.add(liquidityAmount);
+            liquidityMap.set(pairAddress, existingPairInfo);
           } else {
-            liquidityMap.set(pairAddress, liquidityAmount);
+            liquidityMap.set(pairAddress, pairInfo);
           }
-        });
-        // 更新状态
+        }
+
         setLiquidityMap(new Map(liquidityMap));
         console.log("Liquidity Map:", Array.from(liquidityMap.entries()));
       } catch (error) {
         console.error("Failed to fetch liquidity balance:", error);
       }
     };
-    fetchLiquidityBalance();
+
+    if (account) {
+      fetchLiquidityBalance();
+    }
   }, [account]);
 
   useEffect(() => {
@@ -189,7 +230,6 @@ export default function Pool() {
           )}
         </div>
       </nav>
-
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="bg-[#191B1F] p-4 md:hidden">
@@ -209,13 +249,32 @@ export default function Pool() {
       <main className="max-w-[480px] mx-auto mt-20">
         <div className="bg-[#212429] rounded-3xl p-4 shadow-lg">
           <h2 className="text-2xl font-semibold mb-4">Your Pool Positions</h2>
-          {positions.length === 0 ? (
+          {Array.from(liquidityMap.entries()).length === 0 ? (
             <p>No positions found.</p>
           ) : (
             <ul>
-              {positions.map((position, index) => (
-                <li key={index}>{position}</li>
-              ))}
+              {Array.from(liquidityMap.entries()).map(
+                ([pairAddress, pairInfo], index) => (
+                  <li key={index} className="mb-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-lg font-medium">
+                          {pairInfo.token0.symbol} - {pairInfo.token1.symbol}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-lg font-medium">
+                          Liquidity:{" "}
+                          {ethers.utils
+                            .formatUnits(pairInfo.liquidityAmount, 18)
+                            .toString()
+                            .slice(0, -12)}
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                )
+              )}
             </ul>
           )}
 
@@ -227,7 +286,6 @@ export default function Pool() {
               }}
               className="flex items-center space-x-2 bg-[#191B1F] px-3 py-1 rounded-full hover:bg-opacity-80"
             >
-              {/* todo webp文件和svg文件 */}
               <img
                 src={`/tokens/${selectedTokenIn.symbol.toLowerCase()}.webp`}
                 alt={selectedTokenIn.symbol}
@@ -278,14 +336,6 @@ export default function Pool() {
           </div>
 
           <div className="mt-8">
-            <p className="text-lg font-medium">Selected Pair:</p>
-            <p>
-              {selectedTokenIn.symbol} - {selectedTokenOut.symbol}
-            </p>
-            <p className="text-lg font-medium mt-2">Liquidity Balance:</p>
-            <p>{liquidityBalance}</p>
-          </div>
-          <div className="mt-8">
             <div className="flex items-center">
               <label
                 className="block text-sm font-medium text-gray-300"
@@ -298,19 +348,6 @@ export default function Pool() {
                 id="amountToken0"
                 value={amountToken0}
                 onChange={(e) => setAmountToken0(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white ml-2"
-              />
-              <label
-                className="block text-sm font-medium text-gray-300 ml-2"
-                htmlFor="minAmountToken0"
-              >
-                Min Amount of {selectedTokenIn.symbol}:
-              </label>
-              <input
-                type="text"
-                id="minAmountToken0"
-                value={minAmountToken0}
-                onChange={(e) => setMinAmountToken0(e.target.value)}
                 className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white ml-2"
               />
             </div>
@@ -328,19 +365,6 @@ export default function Pool() {
                 id="amountToken1"
                 value={amountToken1}
                 onChange={(e) => setAmountToken1(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white ml-2"
-              />
-              <label
-                className="block text-sm font-medium text-gray-300 ml-2"
-                htmlFor="minAmountToken1"
-              >
-                Min Amount of {selectedTokenOut.symbol}:
-              </label>
-              <input
-                type="text"
-                id="minAmountToken1"
-                value={minAmountToken1}
-                onChange={(e) => setMinAmountToken1(e.target.value)}
                 className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white ml-2"
               />
             </div>
