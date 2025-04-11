@@ -30,6 +30,7 @@ export default function Pool() {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false); // 控制代币选择模态框的显示状态
   const [modalType, setModalType] = useState(""); // 当前模态框类型（"in" 或 "out"）
 
+  // 获取account全部流动性
   useEffect(() => {
     const fetchLiquidityBalance = async () => {
       try {
@@ -56,11 +57,9 @@ export default function Pool() {
             signer
           );
 
-          // 获取 token0 和 token1 地址
           const token0Address = await pairContract.token0();
           const token1Address = await pairContract.token1();
 
-          // 创建 token0 和 token1 的合约实例
           const token0Contract = new ethers.Contract(
             token0Address,
             ERC20_ABI,
@@ -72,7 +71,6 @@ export default function Pool() {
             signer
           );
 
-          // 获取 token0 和 token1 的 symbol
           const token0Symbol = await token0Contract.symbol();
           const token1Symbol = await token1Contract.symbol();
 
@@ -105,6 +103,7 @@ export default function Pool() {
     }
   }, [account]);
 
+  // 获取account当前pair流动性
   useEffect(() => {
     const fetchPairLiquidity = async () => {
       if (!selectedTokenIn || !selectedTokenOut || !account) return;
@@ -161,11 +160,6 @@ export default function Pool() {
       setSelectedTokenOut(token);
     }
     setIsTokenModalOpen(false);
-  };
-
-  const openTokenModal = (type) => {
-    setModalType(type);
-    setIsTokenModalOpen(true);
   };
 
   return (
@@ -250,27 +244,27 @@ export default function Pool() {
         <div className="bg-[#212429] rounded-3xl p-4 shadow-lg">
           <h2 className="text-2xl font-semibold mb-4">Your Pool Positions</h2>
           {Array.from(liquidityMap.entries()).length === 0 ? (
-            <p>No positions found.</p>
+            <p className="text-gray-400">No positions found.</p>
           ) : (
-            <ul>
+            <ul className="space-y-4">
               {Array.from(liquidityMap.entries()).map(
                 ([pairAddress, pairInfo], index) => (
-                  <li key={index} className="mb-4">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-lg font-medium">
-                          {pairInfo.token0.symbol} - {pairInfo.token1.symbol}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-lg font-medium">
-                          Liquidity:{" "}
-                          {ethers.utils
-                            .formatUnits(pairInfo.liquidityAmount, 18)
-                            .toString()
-                            .slice(0, -12)}
-                        </p>
-                      </div>
+                  <li
+                    key={index}
+                    className="flex justify-between items-center mb-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span>
+                        {pairInfo.token0.symbol} / {pairInfo.token1.symbol}
+                      </span>
+                    </div>
+                    <div className="text-lg font-medium">
+                      Liquidity:{" "}
+                      <span className="">
+                        {parseFloat(
+                          ethers.utils.formatUnits(pairInfo.liquidityAmount, 18)
+                        ).toFixed(6)}
+                      </span>
                     </div>
                   </li>
                 )
@@ -278,7 +272,7 @@ export default function Pool() {
             </ul>
           )}
 
-          <div className="flex justify-between mt-2">
+          <div className="flex justify-between mt-4">
             <button
               onClick={() => {
                 setModalType("in");
@@ -336,42 +330,42 @@ export default function Pool() {
           </div>
 
           <div className="mt-8">
-            <div className="flex items-center">
-              <label
-                className="block text-sm font-medium text-gray-300"
-                htmlFor="amountToken0"
-              >
-                Amount of {selectedTokenIn.symbol}:
-              </label>
-              <input
-                type="text"
-                id="amountToken0"
-                value={amountToken0}
-                onChange={(e) => setAmountToken0(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white ml-2"
-              />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="flex items-center">
-              <label
-                className="block text-sm font-medium text-gray-300"
-                htmlFor="amountToken1"
-              >
-                Amount of {selectedTokenOut.symbol}:
-              </label>
-              <input
-                type="text"
-                id="amountToken1"
-                value={amountToken1}
-                onChange={(e) => setAmountToken1(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white ml-2"
-              />
+            <div className="flex items-center justify-between">
+              <div className="flex-1 mr-4">
+                <label
+                  className="block text-sm font-medium text-gray-300 mb-1"
+                  htmlFor="amountToken0"
+                >
+                  Amount of {selectedTokenIn.symbol}:
+                </label>
+                <input
+                  type="text"
+                  id="amountToken0"
+                  value={amountToken0}
+                  onChange={(e) => setAmountToken0(e.target.value)}
+                  className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white"
+                />
+              </div>
+              <div className="flex-1">
+                <label
+                  className="block text-sm font-medium text-gray-300 mb-1"
+                  htmlFor="amountToken1"
+                >
+                  Amount of {selectedTokenOut.symbol}:
+                </label>
+                <input
+                  type="text"
+                  id="amountToken1"
+                  value={amountToken1}
+                  onChange={(e) => setAmountToken1(e.target.value)}
+                  className="w-full mt-1 p-2 border border-gray-600 rounded-lg bg-[#191B1F] text-white"
+                />
+              </div>
             </div>
           </div>
           <div className="mt-8">
             <button
-              className="w-full mt-4 py-4 rounded-2xl text-lg font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white"
+              className="w-full mt-4 py-2 rounded-lg text-base font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white"
               onClick={handleAddLiquidityClick}
             >
               Add Liquidity
@@ -384,8 +378,8 @@ export default function Pool() {
       {isAddLiquidityModalOpen && (
         <AddLiquidity
           signer={signer}
-          token0Addr={selectedTokenIn.address}
-          token1Addr={selectedTokenOut.address}
+          token0Addr={selectedTokenIn}
+          token1Addr={selectedTokenOut}
           token0Amount={amountToken0}
           token1Amount={amountToken1}
           onClose={closeAddLiquidityModal}

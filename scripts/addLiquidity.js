@@ -7,10 +7,9 @@ const {
   ERC20_ABI,
   WETH_ABI,
   TOKENS,
+  storageAbi,
 } = require("./constants");
 const storageAddress = process.env.NEXT_PUBLIC_STORAGE_ADDRESS;
-const storageAbi =
-  require("../artifacts/contracts/UserStorageData.sol/UserStorageData.json").abi;
 
 /*
   npx hardhat run --network localhost scripts/addLiquidity.js
@@ -47,9 +46,6 @@ async function addLiquidity() {
     await tx.wait();
   }
   console.log("pairAddress", pairAddress);
-
-  // const token0Contract = new ethers.Contract(token0Addr, WETH_ABI, signer);
-  // const token1Contract = new ethers.Contract(token1Addr, ERC20_ABI, signer);
 
   const token0Contract = new ethers.Contract(
     token0Addr,
@@ -93,17 +89,16 @@ async function addLiquidity() {
     await tx.wait();
   }
 
-  // Parse amounts
   const token0AmountParsed =
     token0.symbol === "WETH"
       ? ethers.utils.parseEther(token0Amount)
       : ethers.utils.parseUnits(token0Amount, token0.decimals);
+
   const token1AmountParsed =
     token1.symbol === "WETH"
       ? ethers.utils.parseEther(token1Amount)
       : ethers.utils.parseUnits(token1Amount, token1.decimals);
 
-  // 检查余额是否足够
   if (token0Balance.lt(token0AmountParsed)) {
     console.error(`Insufficient ${token0.symbol} balance.`);
     return;

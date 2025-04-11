@@ -105,14 +105,6 @@ export default function Home() {
           />
         </div>
 
-        {/* <AddLiquidity
-            signer={signer}
-            token0Addr={token0Addr}
-            token1Addr={token1Addr}
-            token0Amount={token0Amount}
-            token1Amount={token1Amount}
-          /> */}
-
         <p className="text-center text-gray-400 mt-6">
           The largest onchain marketplace. Buy and sell crypto
           <br />

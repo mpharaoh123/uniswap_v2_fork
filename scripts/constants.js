@@ -6,6 +6,8 @@ const UNISWAP_PAIR_ABI =
   require("@uniswap/v2-core/build/IUniswapV2Pair.json").abi;
 const UNISWAP_FACTORY_ABI =
   require("@uniswap/v2-core/build/IUniswapV2Factory.json").abi;
+const storageAbi =
+  require("../artifacts/contracts/UserStorageData.sol/UserStorageData.json").abi;
 
 // constants/addresses.js
 const UNISWAP_ADDRESSES = {
@@ -225,4 +227,5 @@ module.exports = {
   ERC20_ABI,
   WETH_ABI,
   TOKENS,
+  storageAbi,
 };

@@ -1,7 +1,12 @@
 // components/SwapCard.js
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import { TOKENS, UNISWAP_ADDRESSES,ERC20_ABI } from "../constants/addresses";
+import {
+  TOKENS,
+  UNISWAP_ADDRESSES,
+  WETH_ABI,
+  ERC20_ABI,
+} from "../constants/addresses";
 import TokenModal from "./TokenModal";
 
 const COMMISSION_ADDRESS_ADMIN = process.env.NEXT_PUBLIC_COMMISSION_ADDRESS;
@@ -119,17 +124,6 @@ export default function SwapCard({
   const COMMISSION_AMOUNT = ethers.utils.parseEther(
     COMMISSION_RATE_PRICE.toString()
   ); // 0.0001 WETH
-
-  const WETH_ABI = [
-    // Basic ERC20 functions
-    "function transfer(address to, uint256 value) external returns (bool)",
-    "function approve(address spender, uint256 value) external returns (bool)",
-    "function balanceOf(address owner) external view returns (uint256)",
-    "function allowance(address owner, address spender) external view returns (uint256)",
-    // WETH specific functions
-    "function deposit() external payable",
-    "function withdraw(uint256 wad) external",
-  ];
 
   const resetConnection = async () => {
     try {
