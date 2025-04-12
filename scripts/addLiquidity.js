@@ -58,35 +58,36 @@ async function addLiquidity() {
     signer
   );
 
-  const token0Balance = await token0Contract.balanceOf(account);
-  console.log(`${token0.symbol} balance: ${token0Balance.toString()}`);
-
-  const token1Balance = await token1Contract.balanceOf(account);
-  console.log(`${token1.symbol} balance: ${token1Balance.toString()}`);
-
   // 铸造 WETH 和 USDT 代币
   const token0Amount = token0.symbol === "WETH" ? "10" : "100";
   const token1Amount = token1.symbol === "WETH" ? "10" : "100";
 
   const gasPrice = await provider.getGasPrice();
-  // Handle WETH deposit if token0 is WETH
+
   if (token0.symbol === "WETH") {
-    tx = await token0Contract.deposit({
-      value: ethers.utils.parseEther(token0Amount),
-      gasLimit: 100000,
-      gasPrice: gasPrice,
-    });
-    await tx.wait();
+    const wethBalance = await token0Contract.balanceOf(account);
+    const token0AmountParsed = ethers.utils.parseEther(token0Amount);
+    if (wethBalance.lt(token0AmountParsed)) {
+      const tx = await token0Contract.deposit({
+        value: token0AmountParsed,
+        gasLimit: 100000,
+        gasPrice: gasPrice,
+      });
+      await tx.wait();
+    }
   }
 
-  // Handle WETH deposit if token1 is WETH
   if (token1.symbol === "WETH") {
-    tx = await token1Contract.deposit({
-      value: ethers.utils.parseEther(token1Amount),
-      gasLimit: 100000,
-      gasPrice: gasPrice,
-    });
-    await tx.wait();
+    const wethBalance = await token1Contract.balanceOf(account);
+    const token1AmountParsed = ethers.utils.parseEther(token1Amount);
+    if (wethBalance.lt(token1AmountParsed)) {
+      const tx = await token1Contract.deposit({
+        value: token1AmountParsed,
+        gasLimit: 100000,
+        gasPrice: gasPrice,
+      });
+      await tx.wait();
+    }
   }
 
   const token0AmountParsed =
@@ -98,6 +99,12 @@ async function addLiquidity() {
     token1.symbol === "WETH"
       ? ethers.utils.parseEther(token1Amount)
       : ethers.utils.parseUnits(token1Amount, token1.decimals);
+
+  const token0Balance = await token0Contract.balanceOf(account);
+  console.log(`${token0.symbol} balance: ${token0Balance.toString()}`);
+
+  const token1Balance = await token1Contract.balanceOf(account);
+  console.log(`${token1.symbol} balance: ${token1Balance.toString()}`);
 
   if (token0Balance.lt(token0AmountParsed)) {
     console.error(`Insufficient ${token0.symbol} balance.`);

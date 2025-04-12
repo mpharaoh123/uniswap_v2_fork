@@ -14,7 +14,6 @@ async function main() {
   const maxPriorityFeePerGas = gasPrice; // 设置为当前的gasPrice
   const maxFeePerGas = baseFeePerGas.add(maxPriorityFeePerGas); // 确保maxFeePerGas足够高
 
-  // 部署合约
   const UserStorageData = await ethers.getContractFactory("UserStorageData");
   const userStorageData = await UserStorageData.deploy({
     maxFeePerGas,
@@ -23,16 +22,13 @@ async function main() {
   await userStorageData.deployed();
   console.log(`UserStorageData deployed to ${userStorageData.address}`);
 
-  // 构造要写入的数据
   const data = `NEXT_PUBLIC_STORAGE_ADDRESS=${userStorageData.address}`;
 
-  // 读取.env文件内容
   const filePath = ".env";
   let fileContent = "";
   try {
     fileContent = fs.readFileSync(filePath, "utf8");
   } catch (error) {
-    // 如果文件不存在，直接写入新的地址
     console.log(".env file not found, creating a new one.");
   }
 

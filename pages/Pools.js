@@ -1,15 +1,15 @@
 import { ethers } from "ethers";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import AddLiquidity from "../components/AddLiquidity";
+import AddLiquidity from "../components/addLiquidity";
 import TokenModal from "../components/TokenModal";
 import {
+  ERC20_ABI,
   STORAGE_ABI,
+  TOKENS,
+  UNISWAP_ADDRESSES,
   UNISWAP_FACTORY_ABI,
   UNISWAP_PAIR_ABI,
-  UNISWAP_ADDRESSES,
-  ERC20_ABI,
-  TOKENS,
 } from "../constants/addresses";
 import { useWeb3 } from "../context/Web3Context";
 
@@ -18,7 +18,6 @@ const STORAGE_ADDRESS = process.env.NEXT_PUBLIC_STORAGE_ADDRESS;
 export default function Pool() {
   const { provider, account, uniswapRouter, connectWallet, signer, network } =
     useWeb3();
-  const [positions, setPositions] = useState([]);
   const [selectedTokenIn, setSelectedTokenIn] = useState(TOKENS.WETH); // 默认Token0
   const [selectedTokenOut, setSelectedTokenOut] = useState(TOKENS.USDT); // 默认Token1
   const [liquidityMap, setLiquidityMap] = useState(new Map()); // 该账户的所有交易对和流动性
@@ -135,10 +134,6 @@ export default function Pool() {
     fetchPairLiquidity();
   }, [selectedTokenIn, selectedTokenOut, account, liquidityMap]);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
   const handleAddLiquidityClick = () => {
     setIsAddLiquidityModalOpen(true);
   };
@@ -182,12 +177,11 @@ export default function Pool() {
               <p className="hover:text-white">Pools</p>
             </Link>
           </div>
-        </div>
-
+        </div>{" "}
         <div className="flex items-center space-x-4">
           <button
             className="px-4 py-2 rounded-full bg-[#191B1F] border border-gray-600 hover:border-gray-400 md:hidden"
-            onClick={toggleMenu}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             <svg
               className="w-5 h-5"
@@ -378,8 +372,8 @@ export default function Pool() {
       {isAddLiquidityModalOpen && (
         <AddLiquidity
           signer={signer}
-          token0Addr={selectedTokenIn}
-          token1Addr={selectedTokenOut}
+          token0={selectedTokenIn}
+          token1={selectedTokenOut}
           token0Amount={amountToken0}
           token1Amount={amountToken1}
           onClose={closeAddLiquidityModal}
