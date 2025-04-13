@@ -360,7 +360,7 @@ export default function Pool() {
         <div className="flex items-center space-x-6">
           <div className="flex items-center">
             <img src="/swap.jpg" alt="Uniswap Logo" className="h-8 w-8" />
-            <span className="ml-2 text-xl font-medium">Uniswap</span>
+            <span className="ml-2 text-xl font-semibold">Uniswap</span>
           </div>
           <div className="flex space-x-6 text-gray-400 hidden md:flex">
             <Link href={{ pathname: "/" }}>
@@ -373,7 +373,7 @@ export default function Pool() {
               <p className="hover:text-white">Pools</p>
             </Link>
           </div>
-        </div>{" "}
+        </div>
         <div className="flex items-center space-x-4">
           <button
             className="px-4 py-2 rounded-full bg-[#191B1F] border border-gray-600 hover:border-gray-400 md:hidden"
@@ -398,7 +398,7 @@ export default function Pool() {
                 d="M9 10h.01M15 10h.01M9 14h6"
               />
             </svg>
-          </button>{" "}
+          </button>
           {!account ? (
             <button
               onClick={connectWallet}
@@ -426,96 +426,105 @@ export default function Pool() {
             <p className="block hover:text-white mb-4">Pools</p>
           </Link>
         </div>
-      )}{" "}
+      )}
       {/* Main Content */}
       <main className="max-w-[480px] mx-auto mt-20">
-        <div className="bg-[#212429] rounded-3xl p-4 shadow-lg">
-          <h2 className="text-2xl font-semibold mb-4">Your Pool Positions</h2>
-          {Array.from(liquidityMap.entries()).length === 0 ? (
-            <p className="text-gray-400">No positions found.</p>
-          ) : (
-            <ul className="space-y-4">
-              {Array.from(liquidityMap.entries()).map(
-                ([pairAddress, pairInfo], index) => (
-                  <li
-                    key={index}
-                    className="flex justify-between items-center mb-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span>
-                        {pairInfo.token0.symbol} / {pairInfo.token1.symbol}
-                      </span>
-                    </div>
-                    <div className="text-lg font-medium">
-                      Liquidity:{" "}
-                      <span className="">
-                        {parseFloat(
-                          ethers.utils.formatUnits(pairInfo.liquidityAmount, 18)
-                        ).toFixed(6)}
-                      </span>
-                    </div>
-                  </li>
-                )
-              )}
-            </ul>
-          )}
+        <div className="bg-[#212429] rounded-2xl p-4 shadow-lg">
+          <h2 className="text-xl font-semibold mb-4">Your Pool Positions</h2>
+          <div className="bg-[#2F3136] rounded-2xl p-4">
+            {Array.from(liquidityMap.entries()).length === 0 ? (
+              <p className="text-gray-400">No positions found.</p>
+            ) : (
+              <ul className="space-y-4">
+                {Array.from(liquidityMap.entries()).map(
+                  ([pairAddress, pairInfo], index) => (
+                    <li
+                      key={index}
+                      className="flex justify-between items-center mb-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span className="text-gray-400 text-sm font-medium">
+                          {pairInfo.token0.symbol} / {pairInfo.token1.symbol}
+                        </span>
+                      </div>
+                      <div className="text-sm font-medium text-gray-400">
+                        Liquidity:{" "}
+                        <span className="text-sm font-medium text-gray-400">
+                          {parseFloat(
+                            ethers.utils.formatUnits(
+                              pairInfo.liquidityAmount,
+                              18
+                            )
+                          ).toFixed(6)}
+                        </span>
+                      </div>
+                    </li>
+                  )
+                )}
+              </ul>
+            )}
+          </div>
           <div className="flex justify-between mt-4">
-            <button
-              onClick={() => {
-                setModalType("in");
-                setIsTokenModalOpen(true);
-              }}
-              className="flex items-center space-x-2 bg-[#191B1F] px-3 py-1 rounded-full hover:bg-opacity-80"
-            >
-              <img
-                src={`/tokens/${selectedTokenIn.symbol.toLowerCase()}.webp`}
-                alt={selectedTokenIn.symbol}
-                className="w-6 h-6 rounded-full"
-              />
-              <span className="text-white">{selectedTokenIn.symbol}</span>
-              <svg
-                className="w-4 h-4 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  setModalType("in");
+                  setIsTokenModalOpen(true);
+                }}
+                className="flex items-center space-x-2 bg-[#191B1F] px-3 py-1 rounded-full hover:bg-opacity-80"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
+                <img
+                  src={`/tokens/${selectedTokenIn.symbol.toLowerCase()}.webp`}
+                  alt={selectedTokenIn.symbol}
+                  className="w-6 h-6 rounded-full"
                 />
-              </svg>
-            </button>
-            <button
-              onClick={() => {
-                setModalType("out");
-                setIsTokenModalOpen(true);
-              }}
-              className="flex items-center space-x-2 bg-[#191B1F] px-3 py-1 rounded-full hover:bg-opacity-80"
-            >
-              <img
-                src={`/tokens/${selectedTokenOut.symbol.toLowerCase()}.svg`}
-                alt={selectedTokenOut.symbol}
-                className="w-6 h-6 rounded-full"
-              />
-              <span className="text-white">{selectedTokenOut.symbol}</span>
-              <svg
-                className="w-4 h-4 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 2424"
+                <span className="text-white">{selectedTokenIn.symbol}</span>
+                <svg
+                  className="w-4 h-4 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  setModalType("out");
+                  setIsTokenModalOpen(true);
+                }}
+                className="flex items-center space-x-2 bg-[#191B1F] px-3 py-1 rounded-full hover:bg-opacity-80"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
+                <img
+                  src={`/tokens/${selectedTokenOut.symbol.toLowerCase()}.svg`}
+                  alt={selectedTokenOut.symbol}
+                  className="w-6 h-6 rounded-full"
                 />
-              </svg>
-            </button>
-          </div>{" "}
-          <div className="mt-8">
+                <span className="text-white">{selectedTokenOut.symbol}</span>
+                <svg
+                  className="w-4 h-4 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div className="mt-4">
             <div className="flex items-center justify-between">
               <div className="flex-1 mr-4">
                 <label
@@ -549,18 +558,17 @@ export default function Pool() {
               </div>
             </div>
           </div>
-          <div className="mt-8">
+          <div className="mt-4">
             <button
               onClick={handleAddLiquidityClick}
-              disabled={!account || isLoading || !amountToken0 || !amountToken1} // 禁用按钮
-              className={`w-full mt-4 py-2 rounded-lg text-base font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white ${
+              disabled={!account || isLoading || !amountToken0 || !amountToken1}
+              className={`w-full py-4 rounded-2xl text-lg font-medium ${
                 !account || isLoading || !amountToken0 || !amountToken1
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }`}
+                  ? "bg-[#8A2BE2] opacity-60 cursor-not-allowed"
+                  : "bg-[#8A2BE2] hover:bg-opacity-90"
+              } text-white`}
             >
-              {isLoading ? "Adding Liquidity..." : "Add Liquidity"}{" "}
-              {/* 加载状态提示 */}
+              {isLoading ? "Adding Liquidity..." : "Add Liquidity"}
             </button>
           </div>
         </div>
