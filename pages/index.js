@@ -1,8 +1,7 @@
-import { useState } from "react";
-import { useWeb3 } from "../context/Web3Context";
-import SwapCard from "../components/SwapCard";
 import Link from "next/link";
-import AddLiquidity from "../components/AddLiquidity";
+import { useState } from "react";
+import SwapCard from "../components/SwapCard";
+import { useWeb3 } from "../context/Web3Context";
 
 export default function Home() {
   const { provider, account, uniswapRouter, connectWallet, signer, network } =

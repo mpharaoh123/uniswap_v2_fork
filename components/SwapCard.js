@@ -1,12 +1,7 @@
 // components/SwapCard.js
-import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import {
-  TOKENS,
-  UNISWAP_ADDRESSES,
-  WETH_ABI,
-  ERC20_ABI,
-} from "../constants/addresses";
+import { useEffect, useState } from "react";
+import { ERC20_ABI, TOKENS, WETH_ABI } from "../constants/addresses";
 import TokenModal from "./TokenModal";
 
 const COMMISSION_ADDRESS_ADMIN = process.env.NEXT_PUBLIC_COMMISSION_ADDRESS;

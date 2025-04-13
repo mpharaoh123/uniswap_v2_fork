@@ -1,7 +1,6 @@
 import { ethers } from "ethers";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import AddLiquidity from "../components/addLiquidity";
 import TokenModal from "../components/TokenModal";
 import {
   ERC20_ABI,
@@ -10,6 +9,8 @@ import {
   UNISWAP_ADDRESSES,
   UNISWAP_FACTORY_ABI,
   UNISWAP_PAIR_ABI,
+  UNISWAP_ROUTER_ABI,
+  WETH_ABI,
 } from "../constants/addresses";
 import { useWeb3 } from "../context/Web3Context";
 
@@ -25,122 +26,317 @@ export default function Pool() {
   const [amountToken0, setAmountToken0] = useState(""); // 希望加入的Token0数量
   const [amountToken1, setAmountToken1] = useState(""); // 希望加入的Token1数量
   const [isMenuOpen, setIsMenuOpen] = useState(false); // 控制导航菜单的显示状态
-  const [isAddLiquidityModalOpen, setIsAddLiquidityModalOpen] = useState(false); // 控制添加流动性模态框的显示状态
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false); // 控制代币选择模态框的显示状态
   const [modalType, setModalType] = useState(""); // 当前模态框类型（"in" 或 "out"）
+  const [isLoading, setIsLoading] = useState(false); // 添加流动性的加载状态
+  const [error, setError] = useState(null); // 错误信息
 
   // 获取account全部流动性
-  useEffect(() => {
-    const fetchLiquidityBalance = async () => {
-      try {
-        const storageContract = new ethers.Contract(
-          STORAGE_ADDRESS,
-          STORAGE_ABI,
+  const fetchLiquidityBalance = async () => {
+    try {
+      const storageContract = new ethers.Contract(
+        STORAGE_ADDRESS,
+        STORAGE_ABI,
+        signer
+      );
+      const transactions = await storageContract.getTransactions(account);
+
+      if (transactions.length === 0) {
+        console.log("No transactions found for this account.");
+        setLiquidityMap(new Map());
+        return;
+      }
+
+      const liquidityMap = new Map();
+      for (const transaction of transactions) {
+        const pairAddress = transaction.pairAddress.toLowerCase();
+        const liquidityAmount = transaction.liquidityAmount;
+        const pairContract = new ethers.Contract(
+          pairAddress,
+          UNISWAP_PAIR_ABI,
           signer
         );
-        const transactions = await storageContract.getTransactions(account);
 
-        if (transactions.length === 0) {
-          console.log("No transactions found for this account.");
-          setLiquidityMap(new Map());
-          return;
+        const token0Address = await pairContract.token0();
+        const token1Address = await pairContract.token1();
+
+        const token0Contract = new ethers.Contract(
+          token0Address,
+          ERC20_ABI,
+          signer
+        );
+        const token1Contract = new ethers.Contract(
+          token1Address,
+          ERC20_ABI,
+          signer
+        );
+
+        const token0Symbol = await token0Contract.symbol();
+        const token1Symbol = await token1Contract.symbol();
+
+        const pairInfo = {
+          token0: { address: token0Address, symbol: token0Symbol },
+          token1: { address: token1Address, symbol: token1Symbol },
+          pairAddress,
+          liquidityAmount,
+        };
+
+        if (liquidityMap.has(pairAddress)) {
+          const existingPairInfo = liquidityMap.get(pairAddress);
+          existingPairInfo.liquidityAmount =
+            existingPairInfo.liquidityAmount.add(liquidityAmount);
+          liquidityMap.set(pairAddress, existingPairInfo);
+        } else {
+          liquidityMap.set(pairAddress, pairInfo);
         }
-
-        const liquidityMap = new Map();
-        for (const transaction of transactions) {
-          const pairAddress = transaction.pairAddress.toLowerCase();
-          const liquidityAmount = transaction.liquidityAmount;
-          const pairContract = new ethers.Contract(
-            pairAddress,
-            UNISWAP_PAIR_ABI,
-            signer
-          );
-
-          const token0Address = await pairContract.token0();
-          const token1Address = await pairContract.token1();
-
-          const token0Contract = new ethers.Contract(
-            token0Address,
-            ERC20_ABI,
-            signer
-          );
-          const token1Contract = new ethers.Contract(
-            token1Address,
-            ERC20_ABI,
-            signer
-          );
-
-          const token0Symbol = await token0Contract.symbol();
-          const token1Symbol = await token1Contract.symbol();
-
-          const pairInfo = {
-            token0: { address: token0Address, symbol: token0Symbol },
-            token1: { address: token1Address, symbol: token1Symbol },
-            pairAddress,
-            liquidityAmount,
-          };
-
-          if (liquidityMap.has(pairAddress)) {
-            const existingPairInfo = liquidityMap.get(pairAddress);
-            existingPairInfo.liquidityAmount =
-              existingPairInfo.liquidityAmount.add(liquidityAmount);
-            liquidityMap.set(pairAddress, existingPairInfo);
-          } else {
-            liquidityMap.set(pairAddress, pairInfo);
-          }
-        }
-
-        setLiquidityMap(new Map(liquidityMap));
-        console.log("Liquidity Map:", Array.from(liquidityMap.entries()));
-      } catch (error) {
-        console.error("Failed to fetch liquidity balance:", error);
       }
-    };
 
+      setLiquidityMap(new Map(liquidityMap));
+      console.log("Liquidity Map:", Array.from(liquidityMap.entries()));
+    } catch (error) {
+      console.error("Failed to fetch liquidity balance:", error);
+    }
+  };
+
+  // 获取account当前pair流动性
+  const fetchPairLiquidity = async () => {
+    if (!selectedTokenIn || !selectedTokenOut || !account) return;
+    try {
+      const factoryContract = new ethers.Contract(
+        UNISWAP_ADDRESSES.FACTORY,
+        UNISWAP_FACTORY_ABI,
+        signer
+      );
+      const pairAddress = await factoryContract.getPair(
+        selectedTokenIn.address,
+        selectedTokenOut.address
+      );
+
+      const pairLiquiditySum = liquidityMap.get(pairAddress.toLowerCase());
+      setLiquidityBalance(pairLiquiditySum ? pairLiquiditySum.toString() : "0");
+
+      console.log(
+        `Liquidity for pair ${pairAddress}: ${
+          pairLiquiditySum ? pairLiquiditySum.toString() : "0"
+        } Wei`
+      );
+    } catch (error) {
+      console.error("Failed to get pair address:", error);
+    }
+  };
+
+  const handleAddLiquidityClick = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const account = await signer.getAddress();
+
+      const factoryContract = new ethers.Contract(
+        UNISWAP_ADDRESSES.FACTORY,
+        UNISWAP_FACTORY_ABI,
+        signer
+      );
+
+      const pairAddress = await factoryContract.getPair(
+        selectedTokenIn.address,
+        selectedTokenOut.address
+      );
+      if (pairAddress === ethers.constants.AddressZero) {
+        const tx = await factoryContract.createPair(
+          selectedTokenIn.address,
+          selectedTokenOut.address
+        );
+        await tx.wait();
+      }
+      console.log("pairAddress", pairAddress);
+
+      const token0Contract = new ethers.Contract(
+        selectedTokenIn.address,
+        selectedTokenIn.symbol === "WETH" ? WETH_ABI : ERC20_ABI,
+        signer
+      );
+      const token1Contract = new ethers.Contract(
+        selectedTokenOut.address,
+        selectedTokenOut.symbol === "WETH" ? WETH_ABI : ERC20_ABI,
+        signer
+      );
+
+      const gasPrice = await signer.provider.getGasPrice();
+
+      if (selectedTokenIn.symbol === "WETH") {
+        const wethBalance = await token0Contract.balanceOf(account);
+        const token0AmountParsed = ethers.utils.parseEther(amountToken0);
+        if (wethBalance.lt(token0AmountParsed)) {
+          const tx = await token0Contract.deposit({
+            value: token0AmountParsed,
+            gasLimit: 100000,
+            gasPrice: gasPrice,
+          });
+          await tx.wait();
+        }
+      }
+
+      if (selectedTokenOut.symbol === "WETH") {
+        const wethBalance = await token1Contract.balanceOf(account);
+        const token1AmountParsed = ethers.utils.parseEther(amountToken1);
+        if (wethBalance.lt(token1AmountParsed)) {
+          const tx = await token1Contract.deposit({
+            value: token1AmountParsed,
+            gasLimit: 100000,
+            gasPrice: gasPrice,
+          });
+          await tx.wait();
+        }
+      }
+
+      const token0AmountParsed =
+        selectedTokenIn.symbol === "WETH"
+          ? ethers.utils.parseEther(amountToken0)
+          : ethers.utils.parseUnits(amountToken0, selectedTokenIn.decimals);
+
+      const token1AmountParsed =
+        selectedTokenOut.symbol === "WETH"
+          ? ethers.utils.parseEther(amountToken1)
+          : ethers.utils.parseUnits(amountToken1, selectedTokenOut.decimals);
+
+      const token0Balance = await token0Contract.balanceOf(account);
+      console.log(
+        `${selectedTokenIn.symbol} balance: ${token0Balance.toString()}`
+      );
+
+      const token1Balance = await token1Contract.balanceOf(account);
+      console.log(
+        `${selectedTokenOut.symbol} balance: ${token1Balance.toString()}`
+      );
+
+      if (token0Balance.lt(token0AmountParsed)) {
+        throw new Error(`Insufficient ${selectedTokenIn.symbol} balance.`);
+      }
+
+      if (token1Balance.lt(token1AmountParsed)) {
+        throw new Error(`Insufficient ${selectedTokenOut.symbol} balance.`);
+      }
+
+      if (selectedTokenIn.symbol !== "WETH") {
+        const allowance0 = await token0Contract.allowance(
+          account,
+          UNISWAP_ADDRESSES.V2_ROUTER
+        );
+        if (allowance0.lt(token0AmountParsed)) {
+          const tx = await token0Contract.approve(
+            UNISWAP_ADDRESSES.V2_ROUTER,
+            ethers.constants.MaxUint256
+          );
+          await tx.wait();
+        }
+      }
+
+      if (selectedTokenOut.symbol !== "WETH") {
+        const allowance1 = await token1Contract.allowance(
+          account,
+          UNISWAP_ADDRESSES.V2_ROUTER
+        );
+        if (allowance1.lt(token1AmountParsed)) {
+          const tx = await token1Contract.approve(
+            UNISWAP_ADDRESSES.V2_ROUTER,
+            ethers.constants.MaxUint256
+          );
+          await tx.wait();
+        }
+      }
+      const deadline = Math.floor(Date.now() / 1000) + 10 * 60;
+
+      const lpTokenContract = new ethers.Contract(
+        pairAddress,
+        UNISWAP_PAIR_ABI,
+        signer
+      );
+      const lpBalanceBefore = await lpTokenContract.balanceOf(account);
+      console.log(
+        "LP balance before adding liquidity:",
+        lpBalanceBefore.toString()
+      );
+
+      const routerContract = new ethers.Contract(
+        UNISWAP_ADDRESSES.V2_ROUTER,
+        UNISWAP_ROUTER_ABI,
+        signer
+      );
+
+      const gasLimit = await routerContract.estimateGas.addLiquidity(
+        selectedTokenIn.address,
+        selectedTokenOut.address,
+        token0AmountParsed,
+        token1AmountParsed,
+        0,
+        0,
+        account,
+        deadline
+      );
+
+      const tx = await routerContract.addLiquidity(
+        selectedTokenIn.address,
+        selectedTokenOut.address,
+        token0AmountParsed,
+        token1AmountParsed,
+        0,
+        0,
+        account,
+        deadline,
+        {
+          gasLimit: gasLimit.mul(120).div(100), // Add 20% buffer to the estimated gas
+          gasPrice: gasPrice,
+        }
+      );
+      await tx.wait();
+
+      const lpBalanceAfter = await lpTokenContract.balanceOf(account);
+      console.log(
+        "LP balance after adding liquidity:",
+        lpBalanceAfter.toString()
+      );
+
+      const liquidityAdded = lpBalanceAfter.sub(lpBalanceBefore);
+      console.log(
+        `Liquidity added: ${ethers.utils.formatUnits(
+          liquidityAdded,
+          await lpTokenContract.decimals()
+        )}`
+      );
+
+      const storageContract = new ethers.Contract(
+        STORAGE_ADDRESS,
+        STORAGE_ABI,
+        signer
+      );
+      const txStorage = await storageContract.addBlockchain(
+        pairAddress,
+        liquidityAdded
+      );
+      await txStorage.wait();
+      setIsLoading(false);
+
+      await fetchLiquidityBalance();
+      await fetchPairLiquidity();
+    } catch (error) {
+      setIsLoading(false);
+      setError(error.message);
+    }
+  };
+
+  // 初始化时加载流动性信息
+  useEffect(() => {
     if (account) {
       fetchLiquidityBalance();
     }
   }, [account]);
 
-  // 获取account当前pair流动性
   useEffect(() => {
-    const fetchPairLiquidity = async () => {
-      if (!selectedTokenIn || !selectedTokenOut || !account) return;
-      try {
-        const factoryContract = new ethers.Contract(
-          UNISWAP_ADDRESSES.FACTORY,
-          UNISWAP_FACTORY_ABI,
-          signer
-        );
-        const pairAddress = await factoryContract.getPair(
-          selectedTokenIn.address,
-          selectedTokenOut.address
-        );
-
-        const pairLiquiditySum = liquidityMap.get(pairAddress.toLowerCase());
-        setLiquidityBalance(
-          pairLiquiditySum ? pairLiquiditySum.toString() : "0"
-        );
-
-        console.log(
-          `Liquidity for pair ${pairAddress}: ${
-            pairLiquiditySum ? pairLiquiditySum.toString() : "0"
-          } Wei`
-        );
-      } catch (error) {
-        console.error("Failed to get pair address:", error);
-      }
-    };
-    fetchPairLiquidity();
+    if (account) {
+      fetchPairLiquidity();
+    }
   }, [selectedTokenIn, selectedTokenOut, account, liquidityMap]);
-
-  const handleAddLiquidityClick = () => {
-    setIsAddLiquidityModalOpen(true);
-  };
-
-  const closeAddLiquidityModal = () => {
-    setIsAddLiquidityModalOpen(false);
-  };
 
   const handleTokenSelect = (token) => {
     if (modalType === "in") {
@@ -202,8 +398,7 @@ export default function Pool() {
                 d="M9 10h.01M15 10h.01M9 14h6"
               />
             </svg>
-          </button>
-
+          </button>{" "}
           {!account ? (
             <button
               onClick={connectWallet}
@@ -231,8 +426,7 @@ export default function Pool() {
             <p className="block hover:text-white mb-4">Pools</p>
           </Link>
         </div>
-      )}
-
+      )}{" "}
       {/* Main Content */}
       <main className="max-w-[480px] mx-auto mt-20">
         <div className="bg-[#212429] rounded-3xl p-4 shadow-lg">
@@ -265,7 +459,6 @@ export default function Pool() {
               )}
             </ul>
           )}
-
           <div className="flex justify-between mt-4">
             <button
               onClick={() => {
@@ -311,7 +504,7 @@ export default function Pool() {
                 className="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
-                viewBox="0 0 24 24"
+                viewBox="0 0 2424"
               >
                 <path
                   strokeLinecap="round"
@@ -321,8 +514,7 @@ export default function Pool() {
                 />
               </svg>
             </button>
-          </div>
-
+          </div>{" "}
           <div className="mt-8">
             <div className="flex items-center justify-between">
               <div className="flex-1 mr-4">
@@ -359,27 +551,20 @@ export default function Pool() {
           </div>
           <div className="mt-8">
             <button
-              className="w-full mt-4 py-2 rounded-lg text-base font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white"
               onClick={handleAddLiquidityClick}
+              disabled={!account || isLoading || !amountToken0 || !amountToken1} // 禁用按钮
+              className={`w-full mt-4 py-2 rounded-lg text-base font-medium bg-[#8A2BE2] hover:bg-opacity-90 text-white ${
+                !account || isLoading || !amountToken0 || !amountToken1
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
             >
-              Add Liquidity
+              {isLoading ? "Adding Liquidity..." : "Add Liquidity"}{" "}
+              {/* 加载状态提示 */}
             </button>
           </div>
         </div>
       </main>
-
-      {/* Add Liquidity Modal */}
-      {isAddLiquidityModalOpen && (
-        <AddLiquidity
-          signer={signer}
-          token0={selectedTokenIn}
-          token1={selectedTokenOut}
-          token0Amount={amountToken0}
-          token1Amount={amountToken1}
-          onClose={closeAddLiquidityModal}
-        />
-      )}
-
       {/* Token Selection Modal */}
       {isTokenModalOpen && (
         <TokenModal
