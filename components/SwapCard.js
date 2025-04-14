@@ -83,7 +83,7 @@ export default function SwapCard({
         selectedTokenIn.address !== TOKENS.WETH.address &&
         selectedTokenOut.address !== TOKENS.WETH.address
       ) {
-        // If neither token is WETH, route through WETH
+        // 除WETH的代币对，均通过WETH作为中间路径，用uniswapRouter查询价格
         path.splice(1, 0, TOKENS.WETH.address);
       }
 

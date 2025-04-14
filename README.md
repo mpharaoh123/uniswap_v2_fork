@@ -1,17 +1,14 @@
+# start
+
+1. npm run fork:dev
+2. npx hardhat run --network localhost scripts/deploy.js
+
 # start tips
+
 1. npm i 或者 yarn install
-2. 浏览器报chrome-extension异常：钱包冲突。卸载其他钱包，防止冲突
-3. coinbase钱包（要开梯子），不用手动添加 http://localhost:127.0.0.1:8545/。小狐狸和tpocket都可能会添加失败
-4. 如果点swap，钱包卡死一直转，就多换几个浏览器，edge、chrome、firefox
-5. weth可以swap任何币种，但是erc20 swap erc20 报错
-
-# scripts
-1. ethers为全局变量，直接使用，不用引入
-2. weth usdt add liquidity成功
-3. weth/erc20 swap erc20成功
-
-# code explain
-1. getQuote时，除WETH的代币对，均通过WETH作为中间路径，用uniswapRouter查询价格
+2. 浏览器报 chrome-extension 异常：钱包冲突。卸载其他钱包，防止冲突
+3. coinbase 钱包（要开梯子），不用手动添加 http://localhost:127.0.0.1:8545/。小狐狸和 tpocket 都可能会添加失败
+4. 如果点 swap，钱包卡死一直转，就多换几个浏览器，edge、chrome、firefox
 
 # Advanced Uniswap Token Swap Dapp
 
