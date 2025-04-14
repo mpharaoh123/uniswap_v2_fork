@@ -94,7 +94,16 @@ export default function Pool() {
       setLiquidityMap(new Map(liquidityMap));
       console.log("Liquidity Map:", Array.from(liquidityMap.entries()));
     } catch (error) {
-      console.error("Failed to fetch liquidity balance:", error);
+      if (
+        error.code === "INVALID_ARGUMENT" ||
+        error.code === "CALL_EXCEPTION"
+      ) {
+        console.error(
+          "UserStorageData address is incorrect, please deploy UserStorageData contract first."
+        );
+      } else {
+        console.error("Failed to fetch liquidity balance:", error);
+      }
     }
   };
 
@@ -360,7 +369,7 @@ export default function Pool() {
         <div className="flex items-center space-x-6">
           <div className="flex items-center">
             <img src="/swap.jpg" alt="Uniswap Logo" className="h-8 w-8" />
-            <span className="ml-2 text-xl font-semibold">Uniswap</span>
+            <span className="ml-2 text-xl font-medium">Uniswap</span>
           </div>
           <div className="flex space-x-6 text-gray-400 hidden md:flex">
             <Link href={{ pathname: "/" }}>

@@ -1334,15 +1334,6 @@
   "resolved" "https://registry.npmjs.org/aws4/-/aws4-1.12.0.tgz"
   "version" "1.12.0"
 
-"axios@^1.2.1":
-  "integrity" "sha512-I88cFiGu9ryt/tfVEi4kX2SITsvDddTajXTOFmt2uK1ZVA8LytjtdeyefdQWEf5PU8w+4SSJDoYnggflB5tW4A=="
-  "resolved" "https://registry.npmjs.org/axios/-/axios-1.2.1.tgz"
-  "version" "1.2.1"
-  dependencies:
-    "follow-redirects" "^1.15.0"
-    "form-data" "^4.0.0"
-    "proxy-from-env" "^1.1.0"
-
 "axios@^1.5.1":
   "integrity" "sha512-eBSYY4Y68NNlHbHBMdeDmKNtDgXWhQsJcGqzO3iLUM0GraQFSS9cVgPX5I9b3lbdFKyYoAEGAZF1DwhTaljNAw=="
   "resolved" "https://registry.npmjs.org/axios/-/axios-1.8.4.tgz"
@@ -2751,7 +2742,7 @@
   "resolved" "https://registry.npmjs.org/flat/-/flat-5.0.2.tgz"
   "version" "5.0.2"
 
-"follow-redirects@^1.12.1", "follow-redirects@^1.15.0", "follow-redirects@^1.15.6":
+"follow-redirects@^1.12.1", "follow-redirects@^1.15.6":
   "integrity" "sha512-gew4GsXizNgdoRyqmyfMHyAmXsZDk6mHkSxZFCzW9gwlbtOW44CDtYavM+y+72qD/Vq2l550kMF52DT8fOLJqQ=="
   "resolved" "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.15.9.tgz"
   "version" "1.15.9"
@@ -2783,12 +2774,13 @@
     "mime-types" "^2.1.12"
 
 "form-data@^4.0.0":
-  "integrity" "sha512-tzN8e4TX8+kkxGPK8D5u0FNmjPUjw3lwC9lSLxxoB/+GtsJG91CO8bSWy73APlgAZzZbXEYZJuxjkHH2w+Ezhw=="
-  "resolved" "https://registry.npmjs.org/form-data/-/form-data-4.0.1.tgz"
-  "version" "4.0.1"
+  "integrity" "sha512-hGfm/slu0ZabnNt4oaRZ6uREyfCj6P4fT/n6A1rGV+Z0VdGXjfOhVUpkn6qVQONHGIFwmveGXyDs75+nr6FM8w=="
+  "resolved" "https://registry.npmjs.org/form-data/-/form-data-4.0.2.tgz"
+  "version" "4.0.2"
   dependencies:
     "asynckit" "^0.4.0"
     "combined-stream" "^1.0.8"
+    "es-set-tostringtag" "^2.1.0"
     "mime-types" "^2.1.12"
 
 "forwarded@0.2.0":

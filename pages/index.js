@@ -83,9 +83,9 @@ export default function Home() {
           <Link href={{ pathname: "/" }}>
             <p className="block hover:text-white mb-4">Trade</p>
           </Link>
-          <button className="block hover:text-white mb-4" onClick={toggleMenu}>
-            Explore
-          </button>
+          <Link href={{ pathname: "/Explore" }}>
+              <p className="block hover:text-white mb-4">Explore</p>
+            </Link>
           <Link href={{ pathname: "/Pools" }}>
             <p className="block hover:text-white mb-4">Pools</p>
           </Link>
