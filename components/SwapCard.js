@@ -27,41 +27,42 @@ export default function SwapCard({
   // Fetch token balances
   const fetchBalances = async () => {
     if (!account || !provider) return;
-
     try {
       // For token IN
       if (selectedTokenIn.address === TOKENS.WETH.address) {
-        const balance = await provider.getBalance(account);
-        setTokenInBalance(ethers.utils.formatEther(balance));
+        const balanceIn = await provider.getBalance(account);
+        setTokenInBalance(ethers.utils.formatEther(balanceIn));
       } else {
-        const contract = new ethers.Contract(
+        const contractIn = new ethers.Contract(
           selectedTokenIn.address,
           ERC20_ABI,
           provider
         );
-        console.log("contract", contract);
-
-        const balance = await contract.balanceOf(account);
+        const balanceIn = await contractIn.balanceOf(account);
         console.log(
-          "balance",
-          ethers.utils.formatUnits(balance, selectedTokenIn.decimals)
+          "balanceIn",
+          ethers.utils.formatUnits(balanceIn, selectedTokenIn.decimals)
         );
-
         setTokenInBalance(
-          ethers.utils.formatUnits(balance, selectedTokenIn.decimals)
+          ethers.utils.formatUnits(balanceIn, selectedTokenIn.decimals)
         );
       }
 
       // For token OUT
-      const contractOut = new ethers.Contract(
-        selectedTokenOut.address,
-        ERC20_ABI,
-        provider
-      );
-      const balanceOut = await contractOut.balanceOf(account);
-      setTokenOutBalance(
-        ethers.utils.formatUnits(balanceOut, selectedTokenOut.decimals)
-      );
+      if (selectedTokenOut.address === TOKENS.WETH.address) {
+        const balanceOut = await provider.getBalance(account);
+        setTokenOutBalance(ethers.utils.formatEther(balanceOut));
+      } else {
+        const contract = new ethers.Contract(
+          selectedTokenOut.address,
+          ERC20_ABI,
+          provider
+        );
+        const balanceOut = await contract.balanceOf(account);
+        setTokenOutBalance(
+          ethers.utils.formatUnits(balanceOut, selectedTokenOut.decimals)
+        );
+      }
     } catch (error) {
       console.error("Error fetching balances:", error);
     }
