@@ -1,14 +1,18 @@
+# todo
+
+liquidity 没有显示余额、余额不足没有提示
+
 # start
 
-1. npm run fork:dev
-2. npx hardhat run --network localhost scripts/deploy.js
+1. terminal: npm run fork:dev
+2. terminal: npx hardhat run --network localhost scripts/deploy.js
+3. open url: http://localhost:3001/
 
 # start tips
 
 1. npm i 或者 yarn install
 2. 浏览器报 chrome-extension 异常：钱包冲突。卸载其他钱包，防止冲突
 3. coinbase 钱包（要开梯子），不用手动添加 http://localhost:127.0.0.1:8545/。小狐狸和 tpocket 都可能会添加失败
-4. 如果点 swap，钱包卡死一直转，就多换几个浏览器，edge、chrome、firefox
 
 # Advanced Uniswap Token Swap Dapp
 
